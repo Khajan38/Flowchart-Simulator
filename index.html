@@ -1,67 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>FlowCharter</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowCharter</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
 </head>
 <body>
-  <div class="navbar">
-    <div><strong>FlowCharter</strong></div>
-    <div>
-      <button>New</button>
-      <button>Open</button>
-      <button style="background-color: #4CAF50; color: white;">Save & Export</button>
+    <div class="header">
+        <div class="logo">FlowCharter</div>
+        <div class="header-buttons">
+            <button class="btn btn-secondary">New</button>
+            <button class="btn btn-secondary">Open</button>
+            <button class="btn btn-primary">Save & Export</button>
+        </div>
     </div>
-  </div>
-
-  <div class="container">
-    <!-- Left Sidebar -->
-    <div class="sidebar-left">
-      <div class="section">
-        <h4>Shapes</h4>
-        <div class="shape">Start/End</div>
-        <div class="shape">Process</div>
-        <div class="shape">Decision</div>
-        <div class="shape">Input/Output</div>
-        <div class="shape">Connector</div>
-      </div>
-      <div class="section">
-        <h4>Tools</h4>
-        <div class="shape">Select</div>
-        <div class="shape">Connect</div>
-      </div>
+    
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Shapes</div>
+                <div class="shape-item">
+                    <div style="width: 80px; height: 30px; border: 1px solid #000; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 12px;">Start/End</div>
+                </div>
+                <div class="shape-item">
+                    <div style="width: 80px; height: 30px; border: 1px solid #000; display: flex; align-items: center; justify-content: center; font-size: 12px;">Process</div>
+                </div>
+                <div class="shape-item">
+                    <div style="width: 60px; height: 30px; border: 1px solid #000; transform: rotate(45deg); position: relative;">
+                        <span style="position: absolute; transform: rotate(-45deg); font-size: 12px; width: 80px; text-align: center;">Decision</span>
+                    </div>
+                </div>
+                <div class="shape-item">
+                    <div style="width: 80px; height: 30px; border: 1px solid #000; transform: skew(-20deg); display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                        <span style="transform: skew(20deg);">Input/Output</span>
+                    </div>
+                </div>
+                <div class="shape-item">
+                    <div style="display: flex; align-items: center; font-size: 12px;">
+                        Connector
+                        <div style="margin-left: 5px; width: 20px; height: 2px; background-color: #000; position: relative;">
+                            <div style="position: absolute; right: -1px; top: -3px; width: 0; height: 0; border-left: 6px solid #000; border-top: 4px solid transparent; border-bottom: 4px solid transparent;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-title">Tools</div>
+                <div class="tool-item active" id="select-tool">
+                    <span class="tool-icon">✓</span> Select
+                </div>
+                <div class="tool-item" id="connect-tool">
+                    <span class="tool-icon">↔</span> Connect
+                </div>
+                <div class="tool-item" id="delete-tool">
+                    <span class="tool-icon">🗑️</span> Delete
+                </div>
+            </div>
+        </div>
+        
+        <div class="canvas cursor-select" id="flowchart-canvas">
+            <!-- Start Node -->
+            <div class="node start-end" data-id="start_1" style="top: 80px; left: 335px;">
+                <span>Start</span>
+            </div>
+            
+            <!-- Process Node -->
+            <div class="node process" data-id="process_1" style="top: 200px; left: 335px;">
+                <span>Process</span>
+            </div>
+            
+            <!-- Decision Node -->
+            <div class="node" data-id="decision_1" style="top: 350px; left: 345px;">
+                <div style="width: 100px; height: 100px; border: 2px solid #ffc107; background-color: rgba(255, 193, 7, 0.1); transform: rotate(45deg); position: relative;">
+                    <span style="position: absolute; transform: rotate(-45deg); width: 100px; text-align: center;">Decision</span>
+                </div>
+            </div>
+            
+            <!-- End Node -->
+            <div class="node start-end" data-id="end_1" style="top: 520px; left: 335px; border-color: #f44336; background-color: rgba(244, 67, 54, 0.1);">
+                <span>End</span>
+            </div>
+            
+            <!-- Connectors -->
+            <svg style="position: absolute; width: 100%; height: 100%; pointer-events: none;" id="connectors-svg">
+                <!-- Start to Process -->
+                <path d="M 375 140 L 375 200" stroke="#000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"></path>
+                
+                <!-- Process to Decision -->
+                <path d="M 375 260 L 375 320" stroke="#000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"></path>
+                
+                <!-- Decision to End (No) -->
+                <path d="M 375 420 L 375 520" stroke="#000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"></path>
+                <text x="355" y="470" style="font-size: 12px;">No</text>
+                
+                <!-- Decision to Right (Yes) -->
+                <path d="M 420 370 L 480 370" stroke="#000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"></path>
+                <text x="430" y="360" style="font-size: 12px;">Yes</text>
+                
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#000" />
+                    </marker>
+                </defs>
+            </svg>
+        </div>
+        
+        <div class="properties-panel">
+            <div class="properties-title">Properties</div>
+            
+            <div class="properties-section">
+                <div class="property-row">
+                    <div class="property-label">ID:</div>
+                    <input type="text" class="property-input" id="node-id" value="decision_1">
+                </div>
+                
+                <div class="property-row">
+                    <div class="property-label">Text:</div>
+                    <input type="text" class="property-input" id="node-text" value="Decision">
+                </div>
+                
+                <div class="property-row">
+                    <div class="property-label">Size:</div>
+                    <div class="size-inputs">
+                        <div class="size-input">
+                            <div class="property-label">W: <span id="node-width">100</span></div>
+                        </div>
+                        <div class="size-input">
+                            <div class="property-label">H: <span id="node-height">100</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="property-row">
+                    <div class="property-label">Style:</div>
+                    <input type="text" class="property-input" id="node-style" value="Default">
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="action-button btn-danger" id="delete-node-btn">Delete</button>
+                </div>
+            </div>
+            
+            <div class="validation-section">
+                <div class="properties-title">Validation</div>
+                
+                <div class="validation-item">
+                    <div class="validation-status status-valid"></div>
+                    <span>Valid start</span>
+                </div>
+                
+                <div class="validation-item">
+                    <div class="validation-status status-valid"></div>
+                    <span>Valid end</span>
+                </div>
+                
+                <div class="validation-item">
+                    <div class="validation-status status-valid"></div>
+                    <span>No cycles</span>
+                </div>
+                
+                <div class="validation-item">
+                    <div class="validation-status status-invalid"></div>
+                    <span>Disconnected node</span>
+                </div>
+                
+                <button class="fix-button">Fix Issues</button>
+            </div>
+        </div>
     </div>
-
-    <!-- Canvas Area -->
-    <div class="canvas" id="canvas">
-      <!-- Shapes will be dynamically added here -->
+    
+    <div class="status-bar">
+        <div class="status-info">Status: Ready | Nodes: <span id="nodes-count">4</span> | Connections: <span id="connections-count">3</span></div>
+        <div class="zoom-controls">
+            <button class="zoom-btn">-</button>
+            <button class="zoom-btn">+</button>
+            <button class="zoom-btn">↺</button>
+        </div>
     </div>
-
-    <!-- Right Sidebar -->
-    <div class="sidebar-right">
-      <div class="section">
-        <h4>Properties</h4>
-        ID: <input type="text" style="width: 100%;" /><br>
-        Text: <input type="text" style="width: 100%;" /><br>
-        Size: <br>
-        W: <input type="number" style="width: 40px;" /> 
-        H: <input type="number" style="width: 40px;" /><br>
-        Style: <select style="width: 100%;">
-          <option>Default</option>
-        </select>
-      </div>
-      <div class="section">
-        <h4>Validation</h4>
-        <p>✔ Valid start<br>✔ Valid end<br>✔ No cycles<br><span style="color:red;">✘ Disconnected node</span></p>
-        <button style="background-color: red; color: white; width: 100%;">Fix Issues</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Status Bar -->
-  <div class="status-bar">
-    Status: Ready | Nodes: 4 | Connections: 3
-  </div>
 </body>
 </html>
