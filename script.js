@@ -18,6 +18,525 @@ document.addEventListener("DOMContentLoaded", function () {
     parallelogram: 1,
     connector: 1,
   };
+  // Add this code near the top of your script.js file, after the variable declarations
+
+// API Functions
+const API_URL = 'http://localhost:5000/api';
+
+// Function to get all flowcharts
+async function fetchAllFlowcharts() {
+  try {
+    const response = await fetch(`${API_URL}/flowcharts`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch flowcharts');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching flowcharts:', error);
+    return [];
+  }
+}
+
+// Function to get a specific flowchart
+async function fetchFlowchart(id) {
+  try {
+    const response = await fetch(`${API_URL}/flowcharts/${id}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch flowchart');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`Error fetching flowchart ${id}:`, error);
+    return null;
+  }
+}
+
+// Function to create a new flowchart
+async function createFlowchart(flowchartData) {
+  try {
+    const response = await fetch(`${API_URL}/flowcharts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(flowchartData),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to create flowchart');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating flowchart:', error);
+    return null;
+  }
+}
+
+// Function to update an existing flowchart
+async function updateFlowchart(id, flowchartData) {
+  try {
+    const response = await fetch(`${API_URL}/flowcharts/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(flowchartData),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to update flowchart');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`Error updating flowchart ${id}:`, error);
+    return null;
+  }
+}
+
+// Function to delete a flowchart
+async function deleteFlowchart(id) {
+  try {
+    const response = await fetch(`${API_URL}/flowcharts/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      throw new Error('Failed to delete flowchart');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`Error deleting flowchart ${id}:`, error);
+    return null;
+  }
+}
+
+// Function to validate a flowchart
+async function validateFlowchart(id) {
+  try {
+    const response = await fetch(`${API_URL}/flowcharts/${id}/validate`, {
+      method: 'POST',
+    });
+    if (!response.ok) {
+      throw new Error('Failed to validate flowchart');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`Error validating flowchart ${id}:`, error);
+    return null;
+  }
+}
+
+// Helper function to convert canvas elements to backend data format
+function serializeFlowchart() {
+  const title = document.title.split('-')[0]?.trim() || 'Untitled Flowchart';
+  
+  const nodes = [];
+  const connections = [];
+  
+  // Get all non-connector nodes
+  document.querySelectorAll('.node:not(.connector)').forEach(node => {
+    const nodeId = node.getAttribute('data-id');
+    const textElement = node.querySelector('.node-text');
+    const text = textElement ? textElement.textContent : '';
+    
+    const nodeRect = node.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
+    
+    const x = node.style.left ? parseInt(node.style.left) : (nodeRect.left - canvasRect.left);
+    const y = node.style.top ? parseInt(node.style.top) : (nodeRect.top - canvasRect.top);
+    
+    // Determine node type from class or data attributes
+    let type = 'generic';
+    if (node.classList.contains('start-end') || node.classList.contains('canvas-start-end')) {
+      if (nodeId.startsWith('start')) {
+        type = 'start';
+      } else if (nodeId.startsWith('end')) {
+        type = 'end';
+      }
+    } else if (node.classList.contains('process') || node.classList.contains('canvas-process')) {
+      type = 'process';
+    } else if (node.classList.contains('canvas-decision') || nodeId.startsWith('decision')) {
+      type = 'decision';
+    } else if (node.classList.contains('canvas-parallelogram') || nodeId.startsWith('input')) {
+      type = 'input_output';
+    }
+    
+    nodes.push({
+      id: nodeId,
+      type: type,
+      text: text,
+      position: { x, y },
+      size: { width: nodeRect.width, height: nodeRect.height }
+    });
+  });
+  
+  // Get all connectors
+  document.querySelectorAll('.connector').forEach(connector => {
+    const sourceId = connector.getAttribute('data-source');
+    const targetId = connector.getAttribute('data-target');
+    
+    // Skip if missing source or target
+    if (!sourceId || !targetId) return;
+    
+    connections.push({
+      id: connector.getAttribute('data-id'),
+      source: sourceId,
+      target: targetId,
+      type: connector.getAttribute('data-type') || 'straight',
+      label: '' // Could add label support later
+    });
+  });
+  
+  return {
+    title: title,
+    nodes: nodes,
+    connections: connections
+  };
+}
+
+// Helper function to render a flowchart from data
+function deserializeFlowchart(flowchartData) {
+  // Clear existing canvas
+  while (canvas.firstChild) {
+    if (canvas.firstChild.id === 'connectors-svg') {
+      // Keep the SVG layer
+      break;
+    }
+    canvas.removeChild(canvas.firstChild);
+  }
+  
+  // Set document title
+  document.title = `${flowchartData.title} - FlowCraft`;
+  
+  // Create nodes
+  flowchartData.nodes.forEach(nodeData => {
+    let node;
+    
+    // Different node types
+    switch(nodeData.type) {
+      case 'start':
+        node = addShapeToCanvas('start', nodeData.position.x, nodeData.position.y);
+        break;
+      case 'end':
+        node = addShapeToCanvas('end', nodeData.position.x, nodeData.position.y);
+        break;
+      case 'process':
+        node = addShapeToCanvas('process', nodeData.position.x, nodeData.position.y);
+        break;
+      case 'decision':
+        node = addShapeToCanvas('decision', nodeData.position.x, nodeData.position.y);
+        break;
+      case 'input_output':
+        node = addShapeToCanvas('parallelogram', nodeData.position.x, nodeData.position.y);
+        break;
+      default:
+        node = addShapeToCanvas('process', nodeData.position.x, nodeData.position.y);
+    }
+    
+    // Set node ID to match loaded data
+    if (node) {
+      node.setAttribute('data-id', nodeData.id);
+      
+      // Set node text
+      const textElement = node.querySelector('.node-text');
+      if (textElement && nodeData.text) {
+        textElement.textContent = nodeData.text;
+      }
+      
+      // Position node (adjust for any offsets)
+      node.style.left = nodeData.position.x + 'px';
+      node.style.top = nodeData.position.y + 'px';
+    }
+  });
+  
+  // Create connections after all nodes exist
+  setTimeout(() => {
+    flowchartData.connections.forEach(connData => {
+      const sourceNode = document.querySelector(`[data-id="${connData.source}"]`);
+      const targetNode = document.querySelector(`[data-id="${connData.target}"]`);
+      
+      if (sourceNode && targetNode) {
+        const connector = createConnector(sourceNode, targetNode);
+        if (connector) {
+          connector.setAttribute('data-id', connData.id);
+        }
+      }
+    });
+    
+    // Update counts
+    updateNodeCount();
+    updateConnectionsCount();
+  }, 100);
+}
+
+// Function to create a new flowchart
+function createNewFlowchart() {
+  if (canvas.querySelectorAll('.node').length > 0) {
+    if (!confirm('Creating a new flowchart will clear your current work. Continue?')) {
+      return;
+    }
+  }
+  
+  // Clear canvas
+  Array.from(canvas.querySelectorAll('.node')).forEach(node => {
+    node.remove();
+  });
+  
+  // Create a basic template with Start and End
+  const startNode = addShapeToCanvas('start', canvas.offsetWidth / 2, 80);
+  const endNode = addShapeToCanvas('end', canvas.offsetWidth / 2, canvas.offsetHeight - 80);
+  
+  // Update counts
+  updateNodeCount();
+  updateConnectionsCount();
+  
+  // Reset title
+  document.title = 'Untitled Flowchart - FlowCraft';
+  
+  return { startNode, endNode };
+}
+
+// Add these event listeners near the end of your document.ready function
+
+// "Save" button click handler
+document.querySelector('.btn-primary.btn-outline-primary').addEventListener('click', async function() {
+  const flowchartData = serializeFlowchart();
+  let result;
+  
+  // Check if we're editing an existing flowchart
+  const currentId = canvas.getAttribute('data-flowchart-id');
+  
+  if (currentId) {
+    result = await updateFlowchart(currentId, flowchartData);
+    showStatusMessage('Flowchart updated successfully');
+  } else {
+    result = await createFlowchart(flowchartData);
+    if (result && result.id) {
+      canvas.setAttribute('data-flowchart-id', result.id);
+      showStatusMessage('Flowchart saved successfully');
+    }
+  }
+  
+  setTimeout(hideStatusMessage, 3000);
+});
+
+// "New" button click handler
+document.querySelectorAll('.btn-secondary').forEach(btn => {
+  if (btn.textContent === 'New') {
+    btn.addEventListener('click', function() {
+      createNewFlowchart();
+      canvas.removeAttribute('data-flowchart-id');
+    });
+  }
+});
+
+// "Open" button click handler
+document.querySelectorAll('.btn-secondary').forEach(btn => {
+  if (btn.textContent === 'Open') {
+    btn.addEventListener('click', async function() {
+      const flowcharts = await fetchAllFlowcharts();
+      
+      if (flowcharts.length === 0) {
+        showStatusMessage('No saved flowcharts found');
+        setTimeout(hideStatusMessage, 3000);
+        return;
+      }
+      
+      showOpenDialog(flowcharts);
+    });
+  }
+});
+
+// "File > New" menu item
+document.querySelector('.dropdown-item:nth-child(1)').addEventListener('click', function() {
+  createNewFlowchart();
+  canvas.removeAttribute('data-flowchart-id');
+});
+
+// "File > Open" menu item
+document.querySelector('.dropdown-item:nth-child(2)').addEventListener('click', async function() {
+  const flowcharts = await fetchAllFlowcharts();
+  
+  if (flowcharts.length === 0) {
+    showStatusMessage('No saved flowcharts found');
+    setTimeout(hideStatusMessage, 3000);
+    return;
+  }
+  
+  showOpenDialog(flowcharts);
+});
+
+// "File > Save" menu item
+document.querySelector('.dropdown-item:nth-child(4)').addEventListener('click', async function() {
+  const flowchartData = serializeFlowchart();
+  let result;
+  
+  // Check if we're editing an existing flowchart
+  const currentId = canvas.getAttribute('data-flowchart-id');
+  
+  if (currentId) {
+    result = await updateFlowchart(currentId, flowchartData);
+    showStatusMessage('Flowchart updated successfully');
+  } else {
+    result = await createFlowchart(flowchartData);
+    if (result && result.id) {
+      canvas.setAttribute('data-flowchart-id', result.id);
+      showStatusMessage('Flowchart saved successfully');
+    }
+  }
+  
+  setTimeout(hideStatusMessage, 3000);
+});
+
+// Function to show open dialog
+function showOpenDialog(flowcharts) {
+  // Create modal dialog
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.position = 'fixed';
+  modal.style.top = '0';
+  modal.style.left = '0';
+  modal.style.width = '100%';
+  modal.style.height = '100%';
+  modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+  modal.style.display = 'flex';
+  modal.style.justifyContent = 'center';
+  modal.style.alignItems = 'center';
+  modal.style.zIndex = '1000';
+  
+  const modalContent = document.createElement('div');
+  modalContent.className = 'modal-content';
+  modalContent.style.width = '600px';
+  modalContent.style.maxHeight = '80%';
+  modalContent.style.backgroundColor = 'white';
+  modalContent.style.borderRadius = '5px';
+  modalContent.style.padding = '20px';
+  modalContent.style.overflow = 'auto';
+  
+  const modalHeader = document.createElement('div');
+  modalHeader.className = 'modal-header';
+  modalHeader.style.display = 'flex';
+  modalHeader.style.justifyContent = 'space-between';
+  modalHeader.style.alignItems = 'center';
+  modalHeader.style.marginBottom = '15px';
+  
+  const modalTitle = document.createElement('h3');
+  modalTitle.textContent = 'Open Flowchart';
+  modalTitle.style.margin = '0';
+  
+  const closeButton = document.createElement('button');
+  closeButton.textContent = '×';
+  closeButton.style.background = 'none';
+  closeButton.style.border = 'none';
+  closeButton.style.fontSize = '24px';
+  closeButton.style.cursor = 'pointer';
+  
+  modalHeader.appendChild(modalTitle);
+  modalHeader.appendChild(closeButton);
+  
+  const modalBody = document.createElement('div');
+  modalBody.className = 'modal-body';
+  
+  // Create list of flowcharts
+  const list = document.createElement('ul');
+  list.style.listStyle = 'none';
+  list.style.padding = '0';
+  
+  flowcharts.forEach(flowchart => {
+    const item = document.createElement('li');
+    item.style.padding = '10px';
+    item.style.margin = '5px 0';
+    item.style.borderRadius = '3px';
+    item.style.backgroundColor = '#f5f5f5';
+    item.style.cursor = 'pointer';
+    item.style.display = 'flex';
+    item.style.justifyContent = 'space-between';
+    item.style.alignItems = 'center';
+    
+    const titleSpan = document.createElement('span');
+    titleSpan.textContent = flowchart.title;
+    
+    const metaSpan = document.createElement('span');
+    metaSpan.style.fontSize = '12px';
+    metaSpan.style.color = '#666';
+    
+    if (flowchart.metadata && flowchart.metadata.modified) {
+      const date = new Date(flowchart.metadata.modified);
+      metaSpan.textContent = `Modified: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+    }
+    
+    item.appendChild(titleSpan);
+    item.appendChild(metaSpan);
+    
+    item.addEventListener('click', async function() {
+      const flowchartData = await fetchFlowchart(flowchart.id);
+      if (flowchartData) {
+        deserializeFlowchart(flowchartData);
+        canvas.setAttribute('data-flowchart-id', flowchart.id);
+        document.body.removeChild(modal);
+      }
+    });
+    
+    list.appendChild(item);
+  });
+  
+  modalBody.appendChild(list);
+  
+  closeButton.addEventListener('click', function() {
+    document.body.removeChild(modal);
+  });
+  
+  modalContent.appendChild(modalHeader);
+  modalContent.appendChild(modalBody);
+  modal.appendChild(modalContent);
+  
+  document.body.appendChild(modal);
+  
+  // Close when clicking outside
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
+  });
+}
+
+// Fix validation button
+document.querySelector('.fix-button').addEventListener('click', async function() {
+  const currentId = canvas.getAttribute('data-flowchart-id');
+  
+  if (currentId) {
+    const validationResults = await validateFlowchart(currentId);
+    
+    if (validationResults) {
+      // Update validation UI
+      const validationItems = document.querySelectorAll('.validation-item');
+      
+      // Check for disconnected nodes
+      if (validationResults.disconnectedNodes) {
+        validationItems[3].querySelector('.validation-status').classList.remove('status-invalid');
+        validationItems[3].querySelector('.validation-status').classList.add('status-valid');
+      } else {
+        validationItems[3].querySelector('.validation-status').classList.remove('status-valid');
+        validationItems[3].querySelector('.validation-status').classList.add('status-invalid');
+      }
+      
+      showStatusMessage('Validation complete');
+      setTimeout(hideStatusMessage, 3000);
+    }
+  } else {
+    showStatusMessage('Please save the flowchart first');
+    setTimeout(hideStatusMessage, 3000);
+  }
+});
+
+// "File > Export" menu item
+document.querySelector('.dropdown-item:nth-child(5)').addEventListener('click', function() {
+  const flowchartData = serializeFlowchart();
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(flowchartData, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", `${flowchartData.title}.json`);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+});
 
   // Convert existing spans to editable divs
   convertExistingNodesToEditable();
@@ -732,4 +1251,518 @@ document.addEventListener("DOMContentLoaded", function () {
   canvas.addEventListener("contextmenu", function (e) {
     e.preventDefault();
   });
+});
+// Add these functions to your script.js file
+
+// Function to collect all flowchart data from the DOM and format it for the API
+function collectFlowchartData() {
+  const nodes = [];
+  const connections = [];
+  const nodeElements = document.querySelectorAll(".node");
+  
+  // Process regular nodes
+  nodeElements.forEach(node => {
+    // Skip connector nodes as they'll be processed separately
+    if (node.classList.contains('connector')) return;
+    
+    const nodeId = node.getAttribute("data-id");
+    const textElement = node.querySelector(".node-text");
+    const text = textElement ? textElement.textContent : "";
+    const rect = node.getBoundingClientRect();
+    const canvasRect = document.getElementById("flowchart-canvas").getBoundingClientRect();
+    
+    // Determine node type based on class or data attribute
+    let nodeType = "process"; // Default
+    if (node.classList.contains("start-end")) {
+      if (nodeId.startsWith("start")) nodeType = "start";
+      else if (nodeId.startsWith("end")) nodeType = "end";
+    } else if (node.classList.contains("process")) {
+      nodeType = "process";
+    } else if (node.classList.contains("canvas-decision") || nodeId.startsWith("decision")) {
+      nodeType = "decision";
+    } else if (node.classList.contains("canvas-parallelogram") || nodeId.startsWith("input")) {
+      nodeType = "parallelogram";
+    }
+    
+    nodes.push({
+      id: nodeId,
+      type: nodeType,
+      text: text,
+      position: {
+        x: parseInt(node.style.left, 10) || 0,
+        y: parseInt(node.style.top, 10) || 0
+      },
+      dimensions: {
+        width: node.offsetWidth,
+        height: node.offsetHeight
+      },
+      style: {
+        color: getComputedStyle(node).color,
+        backgroundColor: getComputedStyle(node).backgroundColor,
+        borderColor: getComputedStyle(node).borderColor
+      }
+    });
+  });
+  
+  // Process connector elements
+  document.querySelectorAll(".connector").forEach(connector => {
+    const connectorId = connector.getAttribute("data-id");
+    const sourceId = connector.getAttribute("data-source");
+    const targetId = connector.getAttribute("data-target");
+    const connectorType = connector.getAttribute("data-type") || "straight";
+    
+    connections.push({
+      id: connectorId,
+      sourceId: sourceId,
+      targetId: targetId,
+      type: connectorType,
+      label: connector.getAttribute("data-label") || "",
+      style: {
+        lineColor: "#000",
+        lineWidth: 2,
+        dashed: false
+      }
+    });
+  });
+  
+  // Process SVG path connectors (from the initial example)
+  const paths = document.querySelectorAll("#connectors-svg path");
+  paths.forEach((path, index) => {
+    // Try to determine source and target based on path coordinates
+    const d = path.getAttribute("d");
+    const pathId = path.id || `path_${index + 1}`;
+    
+    // For simplicity, we'll create generic connection objects
+    // In a real app, you'd need to determine actual source/target nodes
+    connections.push({
+      id: pathId,
+      type: "path",
+      path: d,
+      style: {
+        lineColor: path.getAttribute("stroke") || "#000",
+        lineWidth: parseInt(path.getAttribute("stroke-width"), 10) || 2,
+        dashed: path.getAttribute("stroke-dasharray") ? true : false
+      }
+    });
+  });
+  
+  return {
+    title: document.title.replace("- FlowCraft", "").trim() || "Untitled Flowchart",
+    nodes: nodes,
+    connections: connections,
+    metadata: {
+      created: new Date().toISOString(),
+      modified: new Date().toISOString(),
+      version: "1.0"
+    }
+  };
+}
+
+// Function to save the current flowchart
+async function saveFlowchart() {
+  try {
+    const flowchartData = collectFlowchartData();
+    
+    // Check if we're updating an existing flowchart
+    const currentFlowchartId = localStorage.getItem("currentFlowchartId");
+    let response;
+    
+    if (currentFlowchartId) {
+      // Update existing flowchart
+      response = await fetch(`/api/flowcharts/${currentFlowchartId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(flowchartData)
+      });
+    } else {
+      // Create new flowchart
+      response = await fetch('/api/flowcharts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(flowchartData)
+      });
+      
+      const data = await response.json();
+      
+      // Store the new flowchart ID
+      if (data.id) {
+        localStorage.setItem("currentFlowchartId", data.id);
+      }
+    }
+    
+    return response.ok;
+  } catch (error) {
+    console.error("Error saving flowchart:", error);
+    return false;
+  }
+}
+
+// Function to load a flowchart by ID
+async function loadFlowchart(flowchartId) {
+  try {
+    const response = await fetch(`/api/flowcharts/${flowchartId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const flowchartData = await response.json();
+    renderFlowchartFromData(flowchartData);
+    
+    // Store the current flowchart ID
+    localStorage.setItem("currentFlowchartId", flowchartId);
+    
+    return true;
+  } catch (error) {
+    console.error("Error loading flowchart:", error);
+    return false;
+  }
+}
+
+// Function to fetch all flowcharts
+async function getAllFlowcharts() {
+  try {
+    const response = await fetch('/api/flowcharts');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching flowcharts:", error);
+    return [];
+  }
+}
+
+// Function to validate the current flowchart
+async function validateFlowchart() {
+  try {
+    const currentFlowchartId = localStorage.getItem("currentFlowchartId");
+    if (!currentFlowchartId) return null;
+    
+    const response = await fetch(`/api/flowcharts/${currentFlowchartId}/validate`, {
+      method: 'POST'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error validating flowchart:", error);
+    return null;
+  }
+}
+
+// Function to render flowchart from API data
+function renderFlowchartFromData(flowchartData) {
+  // Clear existing canvas
+  const canvas = document.getElementById("flowchart-canvas");
+  
+  // Remove all nodes except the SVG container
+  const svgContainer = document.getElementById("connectors-svg");
+  const nodesToRemove = document.querySelectorAll(".node");
+  nodesToRemove.forEach(node => node.remove());
+  
+  // Clear SVG paths
+  while (svgContainer.firstChild) {
+    svgContainer.removeChild(svgContainer.firstChild);
+  }
+  
+  // Re-add marker definitions
+  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+  const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+  marker.setAttribute("id", "arrowhead");
+  marker.setAttribute("markerWidth", "10");
+  marker.setAttribute("markerHeight", "7");
+  marker.setAttribute("refX", "9");
+  marker.setAttribute("refY", "3.5");
+  marker.setAttribute("orient", "auto");
+  
+  const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  polygon.setAttribute("points", "0 0, 10 3.5, 0 7");
+  polygon.setAttribute("fill", "#000");
+  
+  marker.appendChild(polygon);
+  defs.appendChild(marker);
+  svgContainer.appendChild(defs);
+  
+  // Create nodes
+  flowchartData.nodes.forEach(nodeData => {
+    const node = document.createElement("div");
+    node.className = "node";
+    node.setAttribute("data-id", nodeData.id);
+    
+    // Set position
+    node.style.left = `${nodeData.position.x}px`;
+    node.style.top = `${nodeData.position.y}px`;
+    
+    // Set node type specific classes and content
+    switch (nodeData.type) {
+      case "start":
+        node.classList.add("start-end");
+        break;
+      case "process":
+        node.classList.add("process");
+        break;
+      case "decision":
+        node.classList.add("canvas-decision");
+        node.innerHTML = `
+          <div style="
+            width: 100px;
+            height: 100px;
+            border: 2px solid #ffc107;
+            background-color: rgba(255, 193, 7, 0.1);
+            transform: rotate(45deg);
+            position: relative;
+          ">
+            <div class="node-text" contenteditable="false" style="
+              position: absolute;
+              transform: rotate(-45deg);
+              width: 100px;
+              text-align: center;
+            ">${nodeData.text}</div>
+          </div>
+        `;
+        canvas.appendChild(node);
+        return; // Skip the default node-text creation below for decision
+      case "parallelogram":
+        node.classList.add("canvas-parallelogram");
+        break;
+      case "end":
+        node.classList.add("start-end");
+        node.style.borderColor = "#f44336";
+        node.style.backgroundColor = "rgba(244, 67, 54, 0.1)";
+        break;
+    }
+    
+    // Add text content if not already added (for decision)
+    if (!node.querySelector(".node-text")) {
+      node.innerHTML = `<div class="node-text" contenteditable="false">${nodeData.text}</div>`;
+    }
+    
+    canvas.appendChild(node);
+  });
+  
+  // Create connections
+  flowchartData.connections.forEach(conn => {
+    if (conn.type === "path") {
+      // Handle SVG path connections
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", conn.path);
+      path.setAttribute("stroke", conn.style.lineColor);
+      path.setAttribute("stroke-width", conn.style.lineWidth);
+      path.setAttribute("fill", "none");
+      path.setAttribute("marker-end", "url(#arrowhead)");
+      
+      if (conn.style.dashed) {
+        path.setAttribute("stroke-dasharray", "5,5");
+      }
+      
+      svgContainer.appendChild(path);
+    } else {
+      // Handle direct node-to-node connections
+      if (!conn.sourceId || !conn.targetId) return;
+      
+      const sourceNode = document.querySelector(`[data-id="${conn.sourceId}"]`);
+      const targetNode = document.querySelector(`[data-id="${conn.targetId}"]`);
+      
+      if (sourceNode && targetNode) {
+        // Create the connector element (DOM-based)
+        const connector = document.createElement("div");
+        connector.className = "node connector";
+        connector.setAttribute("data-id", conn.id);
+        connector.setAttribute("data-source", conn.sourceId);
+        connector.setAttribute("data-target", conn.targetId);
+        connector.setAttribute("data-type", conn.type);
+        
+        if (conn.label) {
+          connector.setAttribute("data-label", conn.label);
+        }
+        
+        // Calculate connector position and dimensions (simplified)
+        const sourceRect = sourceNode.getBoundingClientRect();
+        const targetRect = targetNode.getBoundingClientRect();
+        const canvasRect = canvas.getBoundingClientRect();
+        
+        const isHorizontal = conn.type === 'horizontal';
+        let x, y, width, height;
+        
+        if (isHorizontal) {
+          const leftRect = sourceRect.left < targetRect.left ? sourceRect : targetRect;
+          const rightRect = sourceRect.left < targetRect.left ? targetRect : sourceRect;
+          
+          x = leftRect.right - canvasRect.left;
+          y = (sourceRect.top + sourceRect.height/2 + targetRect.top + targetRect.height/2)/2 - canvasRect.top - 10;
+          width = rightRect.left - leftRect.right;
+          height = 20;
+          
+          connector.innerHTML = `
+            <svg width="${width}" height="${height}" class="connector-svg">
+              <defs>
+                <marker id="arrowhead_conn_${conn.id}" markerWidth="10" markerHeight="7" 
+                refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#000" />
+                </marker>
+              </defs>
+              <line x1="0" y1="${height/2}" x2="${width - 5}" y2="${height/2}" 
+                    stroke="#000" stroke-width="2" marker-end="url(#arrowhead_conn_${conn.id})" />
+            </svg>
+          `;
+        } else {
+          const topRect = sourceRect.top < targetRect.top ? sourceRect : targetRect;
+          const bottomRect = sourceRect.top < targetRect.top ? targetRect : sourceRect;
+          
+          x = (sourceRect.left + sourceRect.width/2 + targetRect.left + targetRect.width/2)/2 - canvasRect.left - 10;
+          y = topRect.bottom - canvasRect.top;
+          width = 20;
+          height = bottomRect.top - topRect.bottom;
+          
+          connector.innerHTML = `
+            <svg width="${width}" height="${height}" class="connector-svg">
+              <defs>
+                <marker id="arrowhead_conn_${conn.id}" markerWidth="10" markerHeight="7" 
+                refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#000" />
+                </marker>
+              </defs>
+              <line x1="${width/2}" y1="0" x2="${width/2}" y2="${height - 5}" 
+                    stroke="#000" stroke-width="2" marker-end="url(#arrowhead_conn_${conn.id})" />
+            </svg>
+          `;
+        }
+        
+        connector.style.position = 'absolute';
+        connector.style.left = x + 'px';
+        connector.style.top = y + 'px';
+        connector.style.width = width + 'px';
+        connector.style.height = height + 'px';
+        connector.style.pointerEvents = 'all';
+        connector.style.zIndex = '10';
+        
+        canvas.appendChild(connector);
+      }
+    }
+  });
+  
+  // Set document title
+  document.title = `${flowchartData.title} - FlowCraft`;
+  
+  // Setup node interactions after rendering
+  setupAllNodeInteractions();
+  
+  // Update node and connections count
+  updateNodeCount();
+  updateConnectionsCount();
+}
+
+// Utility function to setup interactions for all nodes
+function setupAllNodeInteractions() {
+  document.querySelectorAll(".node").forEach(node => {
+    setupNodeInteractions(node);
+  });
+}
+
+// Initialize save button event listeners
+document.addEventListener("DOMContentLoaded", function() {
+  // Update the Save button event listener
+  const saveButton = document.querySelector(".btn-primary.btn-outline-primary");
+  if (saveButton) {
+    saveButton.addEventListener("click", async function() {
+      const success = await saveFlowchart();
+      if (success) {
+        alert("Flowchart saved successfully!");
+      } else {
+        alert("Error saving flowchart.");
+      }
+    });
+  }
+  
+  // Add Open button event listener
+  const openButton = document.querySelector(".btn-secondary:nth-child(2)");
+  if (openButton) {
+    openButton.addEventListener("click", async function() {
+      const flowcharts = await getAllFlowcharts();
+      if (flowcharts.length === 0) {
+        alert("No flowcharts found. Create and save one first!");
+        return;
+      }
+      
+      // Simple implementation - normally you would display a modal with a list
+      const list = flowcharts.map((fc, i) => `${i+1}. ${fc.title} (${fc.id})`).join("\n");
+      const selection = prompt(`Select a flowchart by number:\n${list}`);
+      
+      if (selection && !isNaN(selection)) {
+        const index = parseInt(selection) - 1;
+        if (index >= 0 && index < flowcharts.length) {
+          await loadFlowchart(flowcharts[index].id);
+        }
+      }
+    });
+  }
+  
+  // Add New button event listener
+  const newButton = document.querySelector(".btn-secondary:first-child");
+  if (newButton) {
+    newButton.addEventListener("click", function() {
+      if (confirm("Create a new flowchart? Unsaved changes will be lost.")) {
+        localStorage.removeItem("currentFlowchartId");
+        location.reload();
+      }
+    });
+  }
+  
+  // Add validation button event listener
+  const validateButton = document.querySelector(".fix-button");
+  if (validateButton) {
+    validateButton.addEventListener("click", async function() {
+      const validationResults = await validateFlowchart();
+      if (validationResults) {
+        updateValidationUI(validationResults);
+      }
+    });
+  }
+});
+
+// Function to update the validation UI based on API response
+function updateValidationUI(validationResults) {
+  const validationItems = document.querySelectorAll(".validation-item");
+  
+  // Reset validation indicators
+  validationItems.forEach(item => {
+    const status = item.querySelector(".validation-status");
+    status.className = "validation-status";
+    status.classList.add(item.getAttribute("data-default-status") || "status-valid");
+  });
+  
+  // Update based on validation results
+  if (validationResults.valid) {
+    // All valid
+    validationItems.forEach(item => {
+      const status = item.querySelector(".validation-status");
+      status.className = "validation-status status-valid";
+    });
+  } else {
+    // Update specific validation statuses
+    for (const [key, value] of Object.entries(validationResults.details)) {
+      const item = document.querySelector(`.validation-item[data-validation="${key}"]`);
+      if (item) {
+        const status = item.querySelector(".validation-status");
+        status.className = "validation-status";
+        status.classList.add(value ? "status-valid" : "status-invalid");
+      }
+    }
+  }
+}
+
+// Add to your existing keyboard shortcuts
+document.addEventListener("keydown", function(e) {
+  if (e.key === "s" && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    saveFlowchart();
+  }
 });
