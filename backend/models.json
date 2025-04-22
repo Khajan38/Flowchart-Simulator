@@ -1,46 +1,121 @@
-
-Node JSON Structure:
-    {
-        "id": "unique-id",
-        "type": "start|process|decision|input_output|end",
-        "text": "Node Label",
+{
+    "id": "flowchart-123",
+    "title": "Flowchart-Maker",
+    "nodes": [
+      {
+        "id": "node-1",
+        "type": "start",
+        "text": "Start",
+        "x": 100,
+        "y": 50,
+        "width": 120,
+        "height": 80,
+        "properties": {}
+      },
+      {
+        "id": "node-2",
+        "type": "process",
+        "text": "Process Data",
         "x": 100,
         "y": 200,
         "width": 120,
         "height": 80,
-        "properties": {
-            // Additional type-specific properties
-        }
-    }
-
-Connection JSON Structure:
-{
-    "id": "unique-id",
-    "source": "source-node-id",
-    "target": "target-node-id",
-    "label": "Optional connection label",
-    "points": [
-        {"x": 100, "y": 200},
-        {"x": 150, "y": 250}
-    ],
-    "type": "default|success|failure"  // For decision paths
-}
-
-Complete Flowchart JSON Structure:
-{
-    "id": "flowchart-unique-id",
-    "title": "My Flowchart",
-    "nodes": [
-        // Array of Node objects
+        "properties": {}
+      },
+      {
+        "id": "node-3",
+        "type": "decision",
+        "text": "Check Result",
+        "x": 100,
+        "y": 350,
+        "width": 120,
+        "height": 80,
+        "properties": {}
+      },
+      {
+        "id": "node-4",
+        "type": "parallelogram",
+        "text": "Insert",
+        "x": 300,
+        "y": 350,
+        "width": 140,
+        "height": 80,
+        "properties": {},
+        "skew": 20
+      },
+      {
+        "id": "node-5",
+        "type": "end",
+        "text": "End Process",
+        "x": 100,
+        "y": 500,
+        "width": 120,
+        "height": 80,
+        "properties": {}
+      }
     ],
     "connections": [
-        // Array of Connection objects
+      {
+        "id": "conn-1",
+        "source": "node-1",
+        "target": "node-2",
+        "label": "",
+        "points": [
+          {"x": 100, "y": 130},
+          {"x": 100, "y": 200}
+        ],
+        "type": "default"
+      },
+      {
+        "id": "conn-2",
+        "source": "node-2",
+        "target": "node-3",
+        "label": "",
+        "points": [
+          {"x": 100, "y": 280},
+          {"x": 100, "y": 350}
+        ],
+        "type": "default"
+      },
+      {
+        "id": "conn-3",
+        "source": "node-3",
+        "target": "node-4",
+        "label": "Yes",
+        "points": [
+          {"x": 220, "y": 350},
+          {"x": 300, "y": 350}
+        ],
+        "type": "success"
+      },
+      {
+        "id": "conn-4",
+        "source": "node-3",
+        "target": "node-2",
+        "label": "No",
+        "points": [
+          {"x": 60, "y": 350},
+          {"x": 60, "y": 200}
+        ],
+        "type": "failure"
+      },
+      {
+        "id": "conn-5",
+        "source": "node-4",
+        "target": "node-5",
+        "label": "",
+        "points": [
+          {"x": 300, "y": 430},
+          {"x": 100, "y": 500}
+        ],
+        "type": "default"
+      }
     ],
     "metadata": {
-        "created": "2025-04-22T10:30:00Z",
-        "modified": "2025-04-22T15:45:00Z",
-        "version": "1.0",
-        "author": "User Name",
-        "tags": ["process", "workflow"]
+      "created": "2025-04-22T10:30:00Z",
+      "modified": "2025-04-22T15:45:00Z",
+      "version": "1.0",
+      "author": "User Name",
+      "tags": ["process", "workflow"]
     }
-}
+  }
