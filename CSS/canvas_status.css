@@ -25,6 +25,12 @@
   border-top: 1px solid #ddd;
   display: flex;
   justify-content: space-between;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height:30px;
 }
 
 .zoom-controls {
@@ -34,7 +40,7 @@
 
 .zoom-btn {
   width: 30px;
-  height: 30px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -42,4 +48,8 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.zoom-btn:hover {
+  opacity: 0.3;
 }

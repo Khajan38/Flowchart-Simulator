@@ -18,11 +18,18 @@ body {
   color: white;
 }
 
-.logo {
+[class^="logo"] {
   font-size: 24px;
   font-weight: bold;
   color: white;
-  margin-right: 30px;
+}
+
+.logo-part1 {
+  color: white;
+}
+
+.logo-part2 {
+  color: #f8d377; 
 }
 
 /* Main menu styles */
@@ -105,18 +112,6 @@ body {
   border: 1px solid #ddd;
 }
 
-/* Status bar improvements */
-.status-bar {
-  display: flex;
-  justify-content: space-between;
-  padding: 5px 15px;
-  background-color: #f8f9fa;
-  border-top: 1px solid #e9ecef;
-  font-size: 13px;
-  color: #6c757d;
-  height: 24px;
-}
-
 .navbar-brand {
   font-size: 28px;
   font-weight: bold;
@@ -125,21 +120,11 @@ body {
   display: inline-block;
   border-radius: 6px;
 }
-.logo-part1 {
-  color: white;
-}
-
-.logo-part2 {
-  color: #f8d377; 
-}
-
 
 .container {
   display: flex;
   height: calc(100% - 90px);
 }
-
-
 
 .btn {
   padding: 8px 20px;
@@ -190,7 +175,7 @@ body {
 }
 
 .validation-section {
-  margin-top: 20px;
+  margin-top: 0px;
 }
 
 .validation-item {
@@ -223,4 +208,19 @@ body {
   border-radius: 4px;
   cursor: pointer;
   margin-top: 10px;
+}
+
+hr {
+  width: 80%;
+  margin: 20px auto;
+  border: 0;
+  height: 1px;
+  background-color: #737171;
+  opacity: 0.3;
+  box-shadow: #a7a7a7;
+}
+
+.properties_hr {
+  margin: 10px auto;
+  border: none;
 }
