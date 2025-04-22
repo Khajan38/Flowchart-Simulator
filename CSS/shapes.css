@@ -1,0 +1,99 @@
+.shape-item, .tool-item {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.shape-item:hover, .tool-item:hover {
+  background-color: #e8e8e8;
+}
+
+.start-end {
+  width: 120px;
+  height: 60px;
+  border: 2px solid #36c;
+  border-radius: 30px;
+  background-color: rgba(51, 102, 204, 0.1);
+}
+
+.process {
+  width: 120px;
+  height: 60px;
+  border: 2px solid #4caf50;
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.decision {
+  width: 100px;
+  height: 100px;
+  border: 2px solid #ffc107;
+  background-color: rgba(255, 193, 7, 0.1);
+  transform: rotate(45deg);
+}
+
+.decision span {
+  transform: rotate(-45deg);
+}
+
+.connector {
+  position: absolute;
+  z-index: 0;
+}
+
+.connector-label {
+  position: absolute;
+  background-color: white;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+.oval {
+  border-radius: 50%;
+}
+
+.diamond {
+  transform: rotate(45deg);
+}
+
+.diamond span {
+  transform: rotate(-45deg);
+}
+
+.parallelogram {
+  transform: skew(-20deg);
+}
+
+.parallelogram span {
+  transform: skew(20deg);
+}
+
+.arrow {
+  position: absolute;
+  background-color: #000;
+  width: 2px;
+}
+
+.shape-input {
+  width: 100%;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.shape-item, .tool-item, .node {
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.connector.dashed {
+  stroke-dasharray: 4;
+}

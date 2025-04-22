@@ -1,0 +1,36 @@
+.node {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: move;
+  z-index: 1;
+  display: inline-block;
+  padding: 10px;
+  min-width: 50px;
+  min-height: 40px;
+  width: fit-content;
+  height: fit-content;
+  box-sizing: border-box;
+}
+
+.node.selected {
+  box-shadow: 0 0 5px 2px #2196f3;
+}
+
+.node-text:focus {
+  outline: none;
+  border: none;
+  box-shadow: none;
+  outline: none;
+  border-bottom: 1px dashed #ccc;
+}
+
+.node-text {
+  display: inline-block;
+  min-width: 30px;
+  padding: 4px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  resize: none;
+}

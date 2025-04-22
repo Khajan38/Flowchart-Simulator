@@ -1,0 +1,45 @@
+.canvas {
+  flex: 1;
+  background-color: #fff;
+  background-image: linear-gradient(#eee 1px, transparent 1px),
+                  linear-gradient(90deg, #eee 1px, transparent 1px);
+  background-size: 20px 20px;
+  position: relative;
+  overflow: auto;
+}
+
+.canvas-shape {
+  position: absolute;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 4px;
+  cursor: move;
+}
+
+.status-bar {
+  background-color: #eee;
+  padding: 5px 20px;
+  border-top: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+}
+
+.zoom-controls {
+  display: flex;
+  gap: 5px;
+}
+
+.zoom-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ddd;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
