@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", function () {
   let isDragging = false;
   let offsetX, offsetY;
   let dragStarted = false;
+  let inConnectorMode = false;
+  let firstSelectedNode = null;
   let nodeCounter = {
     "start-end": 2,
     process: 2,
@@ -89,6 +91,14 @@ document.addEventListener("DOMContentLoaded", function () {
       toolItems.forEach((t) => t.classList.remove("active"));
       shapeItems.forEach((s) => s.classList.remove("active"));
       this.classList.add("active");
+      
+      // Special case for connector (index 5)
+      if (index === 5) {
+        // This triggers connector mode directly when clicking on the connector shape
+        enterConnectorMode();
+        return;
+      }
+      
       switch (index) {
         case 0:
           selectedShape = "start";
@@ -140,77 +150,303 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   });
+  
+  function showStatusMessage(message) {
+    let statusMessage = document.getElementById('status-message');
+    if (!statusMessage) {
+        statusMessage = document.createElement('div');
+        statusMessage.id = 'status-message';
+        statusMessage.style.position = 'fixed';
+        statusMessage.style.bottom = '20px';
+        statusMessage.style.left = '50%';
+        statusMessage.style.transform = 'translateX(-50%)';
+        statusMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        statusMessage.style.color = 'white';
+        statusMessage.style.padding = '10px 20px';
+        statusMessage.style.borderRadius = '5px';
+        statusMessage.style.zIndex = '1000';
+        document.body.appendChild(statusMessage);
+    }
+    statusMessage.textContent = message;
+    statusMessage.style.display = 'block';
+  }
+
+  function hideStatusMessage() {
+    const statusMessage = document.getElementById('status-message');
+    if (statusMessage) {
+        statusMessage.style.display = 'none';
+    }
+  }
+
+  function enterConnectorMode() {
+    inConnectorMode = true;
+    document.body.classList.add('connector-mode');
+    canvas.style.cursor = 'crosshair';
+    
+    // Reset any existing selections
+    if (selectedNode) {
+      selectedNode.classList.remove('selected');
+      selectedNode = null;
+    }
+    
+    // Set the current tool for proper state tracking
+    currentTool = "connect";
+    
+    showStatusMessage("Select first node to connect");
+
+    // Add event listeners for node selection
+    document.querySelectorAll('.node').forEach(node => {
+        node.addEventListener('click', handleConnectorNodeSelection);
+    });
+  }
+
+  function handleConnectorNodeSelection(e) {
+    e.stopPropagation(); 
+    
+    if (!inConnectorMode) return;
+    
+    const clickedNode = e.currentTarget;
+    
+    if (firstSelectedNode === null) {
+        firstSelectedNode = clickedNode;
+        firstSelectedNode.classList.add('selected-for-connection');
+        showStatusMessage("Select second node to connect");
+    } else if (clickedNode !== firstSelectedNode) {
+        createConnector(firstSelectedNode, clickedNode);
+        exitConnectorMode();
+    }
+  }
+
+  function exitConnectorMode() {
+    inConnectorMode = false;
+    
+    if (firstSelectedNode) {
+      firstSelectedNode.classList.remove('selected-for-connection');
+      firstSelectedNode = null;
+    }
+    
+    document.body.classList.remove('connector-mode');
+    hideStatusMessage();
+    canvas.style.cursor = '';
+
+    document.querySelectorAll('.node').forEach(node => {
+      node.removeEventListener('click', handleConnectorNodeSelection);
+    });
+    
+    currentTool = 'select';
+    toolItems.forEach(t => t.classList.remove('active'));
+    document.getElementById('select-tool').classList.add('active');
+  }
+
+  function createConnector(sourceNode, targetNode) {
+    
+    const sourceRect = sourceNode.getBoundingClientRect();
+    const targetRect = targetNode.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
+    
+    
+    const sourceCanvasX = sourceRect.left - canvasRect.left;
+    const sourceCanvasY = sourceRect.top - canvasRect.top;
+    const targetCanvasX = targetRect.left - canvasRect.left;
+    const targetCanvasY = targetRect.top - canvasRect.top;
+
+    const sourceCenter = {
+        x: sourceCanvasX + sourceRect.width / 2,
+        y: sourceCanvasY + sourceRect.height / 2
+    };
+    
+    const targetCenter = {
+        x: targetCanvasX + targetRect.width / 2,
+        y: targetCanvasY + targetRect.height / 2
+    };
+    
+    
+    const dx = Math.abs(targetCenter.x - sourceCenter.x);
+    const dy = Math.abs(targetCenter.y - sourceCenter.y);
+    const isHorizontal = dx > dy;
+    
+    const connector = document.createElement('div');
+    connector.className = 'node connector';
+    
+    const counter = nodeCounter['connector']++;
+    
+    connector.setAttribute('data-id', `connector_${counter}`);
+    connector.setAttribute('data-source', sourceNode.getAttribute('data-id'));
+    connector.setAttribute('data-target', targetNode.getAttribute('data-id'));
+    connector.setAttribute('data-type', isHorizontal ? 'horizontal' : 'vertical');
+    
+ 
+    let x, y, width, height;
+    
+    if (isHorizontal) {
+       
+        const leftNode = sourceCenter.x < targetCenter.x ? sourceNode : targetNode;
+        const rightNode = sourceCenter.x < targetCenter.x ? targetNode : sourceNode;
+        const leftRect = leftNode.getBoundingClientRect();
+        const rightRect = rightNode.getBoundingClientRect();
+        
+       
+        const startX = leftRect.left - canvasRect.left + leftRect.width;
+        const endX = rightRect.left - canvasRect.left;
+        
+        
+        x = startX;
+        y = sourceCenter.y - 10;
+        width = endX - startX;
+        height = 20; 
+        
+        connector.innerHTML = `
+            <svg width="${width}" height="${height}" class="connector-svg">
+                <defs>
+                    <marker id="arrowhead_${counter}" markerWidth="10" markerHeight="7" 
+                    refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#000" />
+                    </marker>
+                </defs>
+                <line x1="0" y1="${height/2}" x2="${width - 5}" y2="${height/2}" 
+                      stroke="#000" stroke-width="2" marker-end="url(#arrowhead_${counter})" />
+            </svg>
+        `;
+    } else {
+       
+        const topNode = sourceCenter.y < targetCenter.y ? sourceNode : targetNode;
+        const bottomNode = sourceCenter.y < targetCenter.y ? targetNode : sourceNode;
+        const topRect = topNode.getBoundingClientRect();
+        const bottomRect = bottomNode.getBoundingClientRect();
+        
+        // Calculate start and end points (from bottom edge of top node to top edge of bottom node)
+        const startY = topRect.top - canvasRect.top + topRect.height;
+        const endY = bottomRect.top - canvasRect.top;
+        
+        // Set position and dimensions
+        x = sourceCenter.x - 10; // Position slightly to the left of center
+        y = startY;
+        width = 20; // Width for hitbox
+        height = endY - startY;
+        
+        connector.innerHTML = `
+            <svg width="${width}" height="${height}" class="connector-svg">
+                <defs>
+                    <marker id="arrowhead_${counter}" markerWidth="10" markerHeight="7" 
+                    refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#000" />
+                    </marker>
+                </defs>
+                <line x1="${width/2}" y1="0" x2="${width/2}" y2="${height - 5}" 
+                      stroke="#000" stroke-width="2" marker-end="url(#arrowhead_${counter})" />
+            </svg>
+        `;
+    }
+
+    connector.style.position = 'absolute';
+    connector.style.left = x + 'px';
+    connector.style.top = y + 'px';
+    connector.style.width = width + 'px';
+    connector.style.height = height + 'px';
+    connector.style.pointerEvents = 'all';
+    connector.style.zIndex = '10';
+    
+    // Add to the canvas
+    canvas.appendChild(connector);
+    
+    // Update node count
+    updateNodeCount();
+    
+    // Update connections count
+    updateConnectionsCount();
+    
+    // Setup connector interactions
+    setupConnectorInteractions(connector);
+    
+    return connector;
+  }
+
+  function setupConnectorInteractions(connector) {
+    // Handle mousedown on connector for selection/deletion
+    connector.addEventListener('mousedown', function(e) {
+        if (currentTool === 'select') {
+            // Select connector
+            if (selectedNode) {
+                selectedNode.classList.remove('selected');
+            }
+            
+            this.classList.add('selected');
+            selectedNode = this;
+            updatePropertiesPanel(this);
+            
+            // Prevent dragging for connectors
+            isDragging = false;
+        } else if (currentTool === 'delete') {
+            // Delete connector
+            deleteNode(this);
+        }
+        
+        e.preventDefault();
+        e.stopPropagation();
+    });
+  }
 
   // Function to add a shape to the canvas
   function addShapeToCanvas(shapeType, x, y) {
     const node = document.createElement("div");
     node.className = "node";
     const counter = nodeCounter[shapeType]++;
-
+    
     // Apply class and content based on shape type
     switch (shapeType) {
       case "start":
         node.classList.add("canvas-start-end");
         node.setAttribute("data-id", `start_${counter}`);
-        node.innerHTML =
-          '<div class="canvas-node-text" contenteditable="false">Start</div>';
+        node.innerHTML = '<div class="canvas-node-text" contenteditable="false">Start</div>';
         break;
       case "process":
         node.classList.add("canvas-process");
         node.setAttribute("data-id", `process_${counter}`);
-        node.innerHTML =
-          '<div class="canvas-node-text" contenteditable="false">Process</div>';
+        node.innerHTML = '<div class="canvas-node-text" contenteditable="false">Process</div>';
         break;
       case "decision":
         node.classList.add("canvas-decision");
         node.setAttribute("data-id", `decision_${counter}`);
-        node.innerHTML =
-          '<div class="canvas-node-text" contenteditable="false">Decision</div>';
+        node.innerHTML = '<div class="canvas-node-text" contenteditable="false">Decision</div>';
         break;
       case "parallelogram":
         node.classList.add("canvas-parallelogram");
         node.setAttribute("data-id", `input_${counter}`);
-        node.innerHTML =
-          '<div class="canvas-node-text" contenteditable="false">Input/Output</div>';
+        node.innerHTML = '<div class="canvas-node-text" contenteditable="false">Input/Output</div>';
         break;
       case "end":
         node.classList.add("canvas-start-end");
         node.setAttribute("data-id", `end_${counter}`);
-        node.innerHTML =
-          '<div class="canvas-node-text" contenteditable="false">End</div>';
+        node.innerHTML = '<div class="canvas-node-text" contenteditable="false">End</div>';
         break;
-	  case "connector":
-		enterConnectorMode();
-		return null;
       default:
         node.classList.add("canvas-default-shape");
         node.setAttribute("data-id", `shape_${counter}`);
-        node.innerHTML =
-          '<div class="canvas-node-text" contenteditable="false">Shape</div>';
+        node.innerHTML = '<div class="canvas-node-text" contenteditable="false">Shape</div>';
     }
-
+  
     // Add to canvas first to measure size
     canvas.appendChild(node);
-
+  
     // Measure width/height to position at center of click
     const rect = node.getBoundingClientRect();
     const width = rect.width;
     const height = rect.height;
     node.style.left = x - width / 2 + "px";
     node.style.top = y - height / 2 + "px";
-
+  
     // Remaining logic
     updateNodeCount();
     setupNodeInteractions(node);
-
+  
     if (selectedNode) {
       selectedNode.classList.remove("selected");
     }
     node.classList.add("selected");
     selectedNode = node;
-
+  
     updatePropertiesPanel(node);
-
+  
     if (currentTool === "edit") {
       const nodeText = node.querySelector(".canvas-node-text");
       if (nodeText) {
@@ -218,9 +454,9 @@ document.addEventListener("DOMContentLoaded", function () {
         nodeText.style.cursor = "text";
       }
     }
-
+  
     return node;
-  }
+  }  
 
   // Setup node interactions (for both existing and new nodes)
   function setupNodeInteractions(node) {
@@ -337,6 +573,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Delete node function
   function deleteNode(node) {
+    // Check if it's a connector
+    if (node.classList.contains('connector')) {
+      // Update connections count when deleted
+      const connectionsCount = document.getElementById("connections-count");
+      const currentConnections = parseInt(connectionsCount.textContent) - 1;
+      connectionsCount.textContent = Math.max(0, currentConnections);
+    }
+    
     node.remove();
     updateNodeCount();
     if (selectedNode === node) {
@@ -396,9 +640,19 @@ document.addEventListener("DOMContentLoaded", function () {
     const currentNodes = document.querySelectorAll(".node").length;
     nodesCount.textContent = currentNodes;
   }
+  
+  // Update connections count
+  function updateConnectionsCount() {
+    const connectionsCount = document.getElementById("connections-count");
+    const currentConnections = document.querySelectorAll(".connector").length;
+    connectionsCount.textContent = currentConnections;
+  }
 
   // Initialize properties panel
   updatePropertiesPanel(null);
+  
+  // Initialize connections count
+  updateConnectionsCount();
 
   // Add mousemove and mouseup event listeners for dragging
   document.addEventListener("mousemove", function (e) {
@@ -452,7 +706,10 @@ document.addEventListener("DOMContentLoaded", function () {
       deleteNode(selectedNode);
     }
     if (e.key === "Escape") {
-      if (selectedNode) {
+      if (inConnectorMode) {
+        exitConnectorMode();
+      }
+      else if (selectedNode) {
         selectedNode.classList.remove("selected");
         selectedNode = null;
         updatePropertiesPanel(null);
