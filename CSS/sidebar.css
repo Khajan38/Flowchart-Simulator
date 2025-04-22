@@ -4,21 +4,51 @@
 }
 
 .sidebar {
-  width: 170px;
+  width: 200px;
   background-color: #f5f5f5;
   border-right: 1px solid #ddd;
   padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  max-height: calc(100vh - 130px); 
+  overflow-y: auto;
+  scrollbar-width: thin; 
+  scrollbar-color: #aaa #f5f5f5; 
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background-color: #aaa;
+  border-radius: 4px;
+  border: 2px solid #f5f5f5;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background-color: #888;
 }
 
 .sidebar-section {
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
 .sidebar-title {
-  font-size: 18px;
   font-weight: bold;
+  font-size: 16px;
   margin-bottom: 10px;
+  color: #333;
+}
+
+.shape-item.active,
+.tool-item.active {
+  background-color: #e0e0e0;
+  border-color: #999;
+}
+
+.tool-icon {
+  margin-right: 10px;
 }
