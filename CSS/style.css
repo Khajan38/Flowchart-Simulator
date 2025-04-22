@@ -8,30 +8,138 @@
 body {
   overflow: hidden;
 }
-
 .header {
-  background-color: #3f51b5;
-  color: white;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
   padding: 10px 20px;
+  background-color: #2c3e50;
+  border-bottom: 1px solid #34495e;
+  color: white;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  margin-right: 30px;
+}
+
+/* Main menu styles */
+.main-menu {
+  display: flex;
+  flex-grow: 1;
+}
+
+.menu-item {
+  position: relative;
+  margin-right: 20px;
+  cursor: pointer;
+  padding: 5px 10px;
+  color: #ecf0f1;
+  font-weight: 500;
+}
+
+.menu-item:hover {
+  color: #ffffff;
+  background-color: #34495e;
+  border-radius: 4px;
+}
+
+/* Dropdown styles */
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  display: none;
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  min-width: 150px;
+  z-index: 1000;
+}
+
+.menu-item:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-item {
+  padding: 8px 16px;
+  color: #333;
+  font-size: 14px;
+  display: block;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+  color: #000;
+}
+
+/* Divider in dropdown */
+.dropdown-divider {
+  height: 1px;
+  background-color: #e9ecef;
+  margin: 4px 0;
+}
+
+/* Header buttons (moved to dropdown) */
+.header-buttons {
+  display: none; /* Hide the original buttons */
+}
+
+/* Main container styling */
+.main-container {
+  display: flex;
+  height: calc(100vh - 90px); /* Account for header and status bar */
+}
+
+/* Canvas styling */
+#flowchart-canvas {
+  background-color: white;
+  flex-grow: 1;
+  position: relative;
+  overflow: auto;
+  border: 1px solid #ddd;
+}
+
+/* Status bar improvements */
+.status-bar {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  padding: 5px 15px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  font-size: 13px;
+  color: #6c757d;
+  height: 24px;
 }
 
-.header button {
-  margin-left: 10px;
-  gap: 10px;
+.navbar-brand {
+  font-size: 28px;
+  font-weight: bold;
+  text-decoration: none;
+  padding: 8px 16px;
+  display: inline-block;
+  border-radius: 6px;
 }
+.logo-part1 {
+  color: white;
+}
+
+.logo-part2 {
+  color: #f8d377; 
+}
+
 
 .container {
   display: flex;
   height: calc(100% - 90px);
 }
 
-.logo {
-  font-size: 24px;
-  font-weight: bold;
-}
+
 
 .btn {
   padding: 8px 20px;
@@ -49,6 +157,27 @@ body {
 .btn-secondary {
   background-color: #4a65c7;
   color: white;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+.btn:focus {
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(49, 130, 206, 0.25);
+}
+
+
+.btn-outline-primary {
+  color: var(--primary);
+  border-color: var(--primary);
+  background-color: transparent;
+}
+
+.btn-outline-primary:hover {
+  color: white;
+  background-color: var(--primary);
 }
 
 .size-inputs {

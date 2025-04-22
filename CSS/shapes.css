@@ -36,11 +36,25 @@
   border: 2px solid #ffc107;
   background-color: rgba(255, 193, 7, 0.1);
   transform: rotate(45deg);
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 10px #2196f3;
 }
 
-.decision span {
+.decision-text {
   transform: rotate(-45deg);
+  font-size: 16px;
+  text-align: center;
+  width: 100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  pointer-events: none;
 }
+
 
 .connector {
   position: absolute;
@@ -72,7 +86,7 @@
 }
 
 .parallelogram span {
-  transform: skew(20deg);
+  transform: skew(10deg);
 }
 
 .arrow {

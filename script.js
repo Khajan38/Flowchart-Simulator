@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
+  
   const toolItems = document.querySelectorAll(".tool-item");
   const shapeItems = document.querySelectorAll(".shape-item");
   const canvas = document.getElementById("flowchart-canvas");
@@ -397,32 +398,32 @@ document.addEventListener("DOMContentLoaded", function () {
       case "start":
         node.classList.add("canvas-start-end");
         node.setAttribute("data-id", `start_${counter}`);
-        node.innerHTML = '<div class="canvas-node-text" contenteditable="false">Start</div>';
+        node.innerHTML = '<div class="node-text" contenteditable="false">Start</div>';
         break;
       case "process":
         node.classList.add("canvas-process");
         node.setAttribute("data-id", `process_${counter}`);
-        node.innerHTML = '<div class="canvas-node-text" contenteditable="false">Process</div>';
+        node.innerHTML = '<div class="node-text" contenteditable="false">Process</div>';
         break;
       case "decision":
         node.classList.add("canvas-decision");
         node.setAttribute("data-id", `decision_${counter}`);
-        node.innerHTML = '<div class="canvas-node-text" contenteditable="false">Decision</div>';
+        node.innerHTML = '<div class="node-text" contenteditable="false">Decision</div>';
         break;
       case "parallelogram":
         node.classList.add("canvas-parallelogram");
         node.setAttribute("data-id", `input_${counter}`);
-        node.innerHTML = '<div class="canvas-node-text" contenteditable="false">Input/Output</div>';
+        node.innerHTML = '<div class="node-text" contenteditable="false">Input/Output</div>';
         break;
       case "end":
         node.classList.add("canvas-start-end");
         node.setAttribute("data-id", `end_${counter}`);
-        node.innerHTML = '<div class="canvas-node-text" contenteditable="false">End</div>';
+        node.innerHTML = '<div class="node-text" contenteditable="false">End</div>';
         break;
       default:
         node.classList.add("canvas-default-shape");
         node.setAttribute("data-id", `shape_${counter}`);
-        node.innerHTML = '<div class="canvas-node-text" contenteditable="false">Shape</div>';
+        node.innerHTML = '<div class="node-text" contenteditable="false">Shape</div>';
     }
   
     // Add to canvas first to measure size

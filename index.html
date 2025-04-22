@@ -16,11 +16,44 @@
 
   <body>
     <div class="header">
-      <div class="logo">FlowCraft</div>
+      <img src="dependencies/logoipsum-370.svg "  width="24" height="24">
+      <a href="index.html" class="navbar-brand">
+        <span class="logo-part1">Flow</span><span class="logo-part2">Craft</span>
+      </a>
+      <div class="main-menu">
+        <div class="menu-item">
+          File
+          <div class="dropdown-menu">
+            <a href="#" class="dropdown-item">New</a>
+            <a href="#" class="dropdown-item">Open</a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item">Save</a>
+            <a href="#" class="dropdown-item">Export</a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item">Exit</a>
+          </div>
+        </div>
+        <div class="menu-item">
+          Developer
+          <div class="dropdown-menu">
+            <a href="#" class="dropdown-item">Developer Tools</a>
+            <a href="#" class="dropdown-item">Settings</a>
+            <a href="#" class="dropdown-item">Extensions</a>
+          </div>
+        </div>
+        <div class="menu-item">
+          Contact
+          <div class="dropdown-menu">
+            <a href="#" class="dropdown-item">Help</a>
+            <a href="#" class="dropdown-item">Report Issue</a>
+            <a href="#" class="dropdown-item">About FlowCraft</a>
+          </div>
+        </div>
+      </div>
       <div class="header-buttons">
         <button class="btn btn-secondary">New</button>
         <button class="btn btn-secondary">Open</button>
-        <button class="btn btn-primary">Save & Export</button>
+        <button class="btn btn-primary btn-outline-primary">Save & Export</button>
       </div>
     </div>
 
@@ -62,20 +95,21 @@
           <div class="shape-item">
             <div
               style="
-                width: 60px;
-                height: 30px;
-                border: 1px solid #000;
-                transform: rotate(45deg);
-                position: relative;
+                width: 50px;
+				height: 50px;
+				border: 1px solid #000;
+				transform: rotate(45deg);
+				position: relative;
+				display: flex;
+				justify-content: center;
+				align-items: center;
               "
             >
               <span
                 style="
-                  position: absolute;
                   transform: rotate(-45deg);
-                  font-size: 12px;
-                  width: 80px;
-                  text-align: center;
+				  font-size: 12px;
+				  text-align: center;
                 "
                 >Decision</span
               >
@@ -130,14 +164,17 @@
           <div class="tool-item" id="edit-tool">
             <span class="tool-icon">✎</span> Edit Text
           </div>
+          <div class="tool-item" id="connect-tool">
+            <span class="tool-icon">↔</span> Connect
+          </div>
           <div class="tool-item" id="delete-tool">
             <span class="tool-icon">🗑️</span> Delete
           </div>
         </div>
       </div>
 
-      <!-- Canvas -->
       <div class="canvas cursor-select" id="flowchart-canvas">
+        <!-- Start Node -->
         <div
           class="node start-end"
           data-id="start_1"
@@ -145,6 +182,8 @@
         >
           <div class="node-text" contenteditable="false">Start</div>
         </div>
+
+        <!-- Process Node -->
         <div
           class="node process"
           data-id="process_1"
@@ -152,6 +191,8 @@
         >
           <div class="node-text" contenteditable="false">Process</div>
         </div>
+
+        <!-- Decision Node -->
         <div class="node" data-id="decision_1" style="top: 350px; left: 345px">
           <div
             style="
@@ -177,6 +218,8 @@
             </div>
           </div>
         </div>
+
+        <!-- End Node -->
         <div
           class="node start-end"
           data-id="end_1"
@@ -189,6 +232,68 @@
         >
           <div class="node-text" contenteditable="false">End</div>
         </div>
+
+        <!-- Connectors -->
+        <svg
+          style="
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+          "
+          id="connectors-svg"
+        >
+          <!-- Start to Process -->
+          <path
+            d="M 375 140 L 375 200"
+            stroke="#000"
+            stroke-width="2"
+            fill="none"
+            marker-end="url(#arrowhead)"
+          ></path>
+
+          <!-- Process to Decision -->
+          <path
+            d="M 375 260 L 375 320"
+            stroke="#000"
+            stroke-width="2"
+            fill="none"
+            marker-end="url(#arrowhead)"
+          ></path>
+
+          <!-- Decision to End (No) -->
+          <path
+            d="M 375 420 L 375 520"
+            stroke="#000"
+            stroke-width="2"
+            fill="none"
+            marker-end="url(#arrowhead)"
+          ></path>
+          <text x="355" y="470" style="font-size: 12px">No</text>
+
+          <!-- Decision to Right (Yes) -->
+          <path
+            d="M 420 370 L 480 370"
+            stroke="#000"
+            stroke-width="2"
+            fill="none"
+            marker-end="url(#arrowhead)"
+          ></path>
+          <text x="430" y="360" style="font-size: 12px">Yes</text>
+
+          <defs>
+            <marker
+              id="arrowhead"
+              markerWidth="10"
+              markerHeight="7"
+              refX="9"
+              refY="3.5"
+              orient="auto"
+            >
+              <polygon points="0 0, 10 3.5, 0 7" fill="#000" />
+            </marker>
+          </defs>
+        </svg>
       </div>
 
       <!-- Right Sidebar -->
@@ -284,9 +389,9 @@
         <span id="connections-count">3</span>
       </div>
       <div class="zoom-controls">
-        <button class="zoom-btn">-</button>
-        <button class="zoom-btn">+</button>
-        <button class="zoom-btn">↺</button>
+        <button class="zoom-btn btn btn-outline-primary">-</button>
+        <button class="zoom-btn btn btn-outline-primary">+</button>
+        <button class="zoom-btn btn btn-outline-primary">↺</button>
       </div>
     </div>
   </body>
