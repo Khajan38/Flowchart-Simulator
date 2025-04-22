@@ -340,7 +340,6 @@ document.querySelector('.dropdown-item:nth-child(4)').addEventListener('click', 
 
 // Function to show open dialog
 function showOpenDialog(flowcharts) {
-  // Create modal dialog
   const modal = document.createElement('div');
   modal.className = 'modal';
   modal.style.position = 'fixed';
