@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-  
   const toolItems = document.querySelectorAll(".tool-item");
   const shapeItems = document.querySelectorAll(".shape-item");
   const canvas = document.getElementById("flowchart-canvas");
@@ -144,75 +143,84 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Function to add a shape to the canvas
   function addShapeToCanvas(shapeType, x, y) {
-	const node = document.createElement("div");
-	node.className = "node";
-	const counter = nodeCounter[shapeType]++;
-	
-	// Apply class and content based on shape type
-	switch (shapeType) {
-	  case "start":
-		node.classList.add("canvas-start-end");
-		node.setAttribute("data-id", `start_${counter}`);
-		node.innerHTML = '<div class="canvas-node-text" contenteditable="false">Start</div>';
-		break;
-	  case "process":
-		node.classList.add("canvas-process");
-		node.setAttribute("data-id", `process_${counter}`);
-		node.innerHTML = '<div class="canvas-node-text" contenteditable="false">Process</div>';
-		break;
-	  case "decision":
-		node.classList.add("canvas-decision");
-		node.setAttribute("data-id", `decision_${counter}`);
-		node.innerHTML = '<div class="canvas-node-text" contenteditable="false">Decision</div>';
-		break;
-	  case "parallelogram":
-		node.classList.add("canvas-parallelogram");
-		node.setAttribute("data-id", `input_${counter}`);
-		node.innerHTML = '<div class="canvas-node-text" contenteditable="false">Input/Output</div>';
-		break;
-	  case "end":
-		node.classList.add("canvas-start-end");
-		node.setAttribute("data-id", `end_${counter}`);
-		node.innerHTML = '<div class="canvas-node-text" contenteditable="false">End</div>';
-		break;
-	  default:
-		node.classList.add("canvas-default-shape");
-		node.setAttribute("data-id", `shape_${counter}`);
-		node.innerHTML = '<div class="canvas-node-text" contenteditable="false">Shape</div>';
-	}
-  
-	// Add to canvas first to measure size
-	canvas.appendChild(node);
-  
-	// Measure width/height to position at center of click
-	const rect = node.getBoundingClientRect();
-	const width = rect.width;
-	const height = rect.height;
-	node.style.left = x - width / 2 + "px";
-	node.style.top = y - height / 2 + "px";
-  
-	// Remaining logic
-	updateNodeCount();
-	setupNodeInteractions(node);
-  
-	if (selectedNode) {
-	  selectedNode.classList.remove("selected");
-	}
-	node.classList.add("selected");
-	selectedNode = node;
-  
-	updatePropertiesPanel(node);
-  
-	if (currentTool === "edit") {
-	  const nodeText = node.querySelector(".canvas-node-text");
-	  if (nodeText) {
-		nodeText.contentEditable = true;
-		nodeText.style.cursor = "text";
-	  }
-	}
-  
-	return node;
-  }  
+    const node = document.createElement("div");
+    node.className = "node";
+    const counter = nodeCounter[shapeType]++;
+
+    // Apply class and content based on shape type
+    switch (shapeType) {
+      case "start":
+        node.classList.add("canvas-start-end");
+        node.setAttribute("data-id", `start_${counter}`);
+        node.innerHTML =
+          '<div class="canvas-node-text" contenteditable="false">Start</div>';
+        break;
+      case "process":
+        node.classList.add("canvas-process");
+        node.setAttribute("data-id", `process_${counter}`);
+        node.innerHTML =
+          '<div class="canvas-node-text" contenteditable="false">Process</div>';
+        break;
+      case "decision":
+        node.classList.add("canvas-decision");
+        node.setAttribute("data-id", `decision_${counter}`);
+        node.innerHTML =
+          '<div class="canvas-node-text" contenteditable="false">Decision</div>';
+        break;
+      case "parallelogram":
+        node.classList.add("canvas-parallelogram");
+        node.setAttribute("data-id", `input_${counter}`);
+        node.innerHTML =
+          '<div class="canvas-node-text" contenteditable="false">Input/Output</div>';
+        break;
+      case "end":
+        node.classList.add("canvas-start-end");
+        node.setAttribute("data-id", `end_${counter}`);
+        node.innerHTML =
+          '<div class="canvas-node-text" contenteditable="false">End</div>';
+        break;
+	  case "connector":
+		enterConnectorMode();
+		return null;
+      default:
+        node.classList.add("canvas-default-shape");
+        node.setAttribute("data-id", `shape_${counter}`);
+        node.innerHTML =
+          '<div class="canvas-node-text" contenteditable="false">Shape</div>';
+    }
+
+    // Add to canvas first to measure size
+    canvas.appendChild(node);
+
+    // Measure width/height to position at center of click
+    const rect = node.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    node.style.left = x - width / 2 + "px";
+    node.style.top = y - height / 2 + "px";
+
+    // Remaining logic
+    updateNodeCount();
+    setupNodeInteractions(node);
+
+    if (selectedNode) {
+      selectedNode.classList.remove("selected");
+    }
+    node.classList.add("selected");
+    selectedNode = node;
+
+    updatePropertiesPanel(node);
+
+    if (currentTool === "edit") {
+      const nodeText = node.querySelector(".canvas-node-text");
+      if (nodeText) {
+        nodeText.contentEditable = true;
+        nodeText.style.cursor = "text";
+      }
+    }
+
+    return node;
+  }
 
   // Setup node interactions (for both existing and new nodes)
   function setupNodeInteractions(node) {

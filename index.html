@@ -113,6 +113,33 @@
               End
             </div>
           </div>
+          <div class="shape-item">
+            <div style="display: flex; align-items: center; font-size: 12px">
+              Connector
+              <div
+                style="
+                  margin-left: 5px;
+                  width: 20px;
+                  height: 2px;
+                  background-color: #000;
+                  position: relative;
+                "
+              >
+                <div
+                  style="
+                    position: absolute;
+                    right: -1px;
+                    top: -3px;
+                    width: 0;
+                    height: 0;
+                    border-left: 6px solid #000;
+                    border-top: 4px solid transparent;
+                    border-bottom: 4px solid transparent;
+                  "
+                ></div>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="sidebar-section">
           <div class="sidebar-title">Tools</div>
@@ -122,17 +149,14 @@
           <div class="tool-item" id="edit-tool">
             <span class="tool-icon">✎</span> Edit Text
           </div>
-          <div class="tool-item" id="connect-tool">
-            <span class="tool-icon">↔</span> Connect
-          </div>
           <div class="tool-item" id="delete-tool">
             <span class="tool-icon">🗑️</span> Delete
           </div>
         </div>
       </div>
 
+      <!-- Canvas -->
       <div class="canvas cursor-select" id="flowchart-canvas">
-        <!-- Start Node -->
         <div
           class="node start-end"
           data-id="start_1"
@@ -140,8 +164,6 @@
         >
           <div class="node-text" contenteditable="false">Start</div>
         </div>
-
-        <!-- Process Node -->
         <div
           class="node process"
           data-id="process_1"
@@ -149,8 +171,6 @@
         >
           <div class="node-text" contenteditable="false">Process</div>
         </div>
-
-        <!-- Decision Node -->
         <div class="node" data-id="decision_1" style="top: 350px; left: 345px">
           <div
             style="
@@ -176,8 +196,6 @@
             </div>
           </div>
         </div>
-
-        <!-- End Node -->
         <div
           class="node start-end"
           data-id="end_1"
@@ -190,68 +208,6 @@
         >
           <div class="node-text" contenteditable="false">End</div>
         </div>
-
-        <!-- Connectors -->
-        <svg
-          style="
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-          "
-          id="connectors-svg"
-        >
-          <!-- Start to Process -->
-          <path
-            d="M 375 140 L 375 200"
-            stroke="#000"
-            stroke-width="2"
-            fill="none"
-            marker-end="url(#arrowhead)"
-          ></path>
-
-          <!-- Process to Decision -->
-          <path
-            d="M 375 260 L 375 320"
-            stroke="#000"
-            stroke-width="2"
-            fill="none"
-            marker-end="url(#arrowhead)"
-          ></path>
-
-          <!-- Decision to End (No) -->
-          <path
-            d="M 375 420 L 375 520"
-            stroke="#000"
-            stroke-width="2"
-            fill="none"
-            marker-end="url(#arrowhead)"
-          ></path>
-          <text x="355" y="470" style="font-size: 12px">No</text>
-
-          <!-- Decision to Right (Yes) -->
-          <path
-            d="M 420 370 L 480 370"
-            stroke="#000"
-            stroke-width="2"
-            fill="none"
-            marker-end="url(#arrowhead)"
-          ></path>
-          <text x="430" y="360" style="font-size: 12px">Yes</text>
-
-          <defs>
-            <marker
-              id="arrowhead"
-              markerWidth="10"
-              markerHeight="7"
-              refX="9"
-              refY="3.5"
-              orient="auto"
-            >
-              <polygon points="0 0, 10 3.5, 0 7" fill="#000" />
-            </marker>
-          </defs>
-        </svg>
       </div>
 
       <!-- Right Sidebar -->
