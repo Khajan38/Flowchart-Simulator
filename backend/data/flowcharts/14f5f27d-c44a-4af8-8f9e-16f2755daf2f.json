@@ -1,0 +1,46 @@
+{
+  "id": "14f5f27d-c44a-4af8-8f9e-16f2755daf2f",
+  "title": "FlowCraft",
+  "nodes": [
+    {
+      "id": "start_NaN",
+      "type": "start",
+      "text": "Start",
+      "position": {
+        "x": 287,
+        "y": 122
+      },
+      "size": {
+        "width": 97.79167175292969,
+        "height": 42.66666793823242
+      }
+    },
+    {
+      "id": "end_NaN",
+      "type": "end",
+      "text": "End",
+      "position": {
+        "x": 285,
+        "y": 341
+      },
+      "size": {
+        "width": 92.46875,
+        "height": 42.66666793823242
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "connector_1",
+      "source": "start_NaN",
+      "target": "end_NaN",
+      "type": "vertical",
+      "label": ""
+    }
+  ],
+  "metadata": {
+    "created": "2025-04-22T23:36:11.346213",
+    "modified": "2025-04-22T23:36:11.346213",
+    "version": "1.0"
+  }
+}

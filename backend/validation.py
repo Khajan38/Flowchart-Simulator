@@ -1,4 +1,3 @@
-
 def validate_flowchart(flowchart_data):
     """
     Validates a flowchart for common issues:
@@ -15,11 +14,9 @@ def validate_flowchart(flowchart_data):
         "issues": []
     }
     
-    # Find start and end nodes
     start_nodes = [node for node in nodes if node["type"] == "start"]
     end_nodes = [node for node in nodes if node["type"] == "end"]
     
-    # Check for exactly one start node
     if len(start_nodes) == 0:
         validation_results["valid"] = False
         validation_results["issues"].append({
@@ -34,7 +31,6 @@ def validate_flowchart(flowchart_data):
             "nodes": [node["id"] for node in start_nodes]
         })
     
-    # Check for at least one end node
     if len(end_nodes) == 0:
         validation_results["valid"] = False
         validation_results["issues"].append({
@@ -42,7 +38,6 @@ def validate_flowchart(flowchart_data):
             "message": "Flowchart must have at least one end node"
         })
     
-    # Check for disconnected nodes
     connected_nodes = set()
     for connection in connections:
         connected_nodes.add(connection["source"])
@@ -59,7 +54,6 @@ def validate_flowchart(flowchart_data):
             "nodes": list(disconnected_nodes)
         })
     
-    # Check for cycles using DFS
     if has_cycle(connections):
         validation_results["valid"] = False
         validation_results["issues"].append({
@@ -71,7 +65,6 @@ def validate_flowchart(flowchart_data):
 
 def has_cycle(connections):
     """Detect cycles in the flowchart using DFS"""
-    # Build adjacency list
     graph = {}
     for conn in connections:
         if conn["source"] not in graph:
@@ -85,7 +78,6 @@ def has_cycle(connections):
         visited.add(node)
         rec_stack.add(node)
         
-        # Visit all neighbors
         neighbors = graph.get(node, [])
         for neighbor in neighbors:
             if neighbor not in visited:
@@ -97,12 +89,9 @@ def has_cycle(connections):
         rec_stack.remove(node)
         return False
     
-    # Check all possible starting nodes
     for node in graph:
         if node not in visited:
             if dfs(node):
                 return True
     
     return False
-
-

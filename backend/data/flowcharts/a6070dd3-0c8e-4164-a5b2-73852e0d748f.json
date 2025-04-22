@@ -1,0 +1,86 @@
+{
+  "id": "a6070dd3-0c8e-4164-a5b2-73852e0d748f",
+  "title": "FlowCraft",
+  "nodes": [
+    {
+      "id": "start_NaN",
+      "type": "start",
+      "text": "Start",
+      "position": {
+        "x": 384,
+        "y": 56
+      },
+      "size": {
+        "width": 65,
+        "height": 49.60000228881836
+      }
+    },
+    {
+      "id": "process_2",
+      "type": "process",
+      "text": "Process",
+      "position": {
+        "x": 355,
+        "y": 161
+      },
+      "size": {
+        "width": 89,
+        "height": 49.60000228881836
+      }
+    },
+    {
+      "id": "input_1",
+      "type": "input_output",
+      "text": "Input/Output",
+      "position": {
+        "x": 339,
+        "y": 275
+      },
+      "size": {
+        "width": 132.9507293701172,
+        "height": 46.400001525878906
+      }
+    },
+    {
+      "id": "end_NaN",
+      "type": "end",
+      "text": "End",
+      "position": {
+        "x": 376,
+        "y": 376
+      },
+      "size": {
+        "width": 59.67499923706055,
+        "height": 49.60000228881836
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "connector_1",
+      "source": "start_NaN",
+      "target": "process_2",
+      "type": "vertical",
+      "label": ""
+    },
+    {
+      "id": "connector_2",
+      "source": "process_2",
+      "target": "input_1",
+      "type": "vertical",
+      "label": ""
+    },
+    {
+      "id": "connector_3",
+      "source": "input_1",
+      "target": "end_NaN",
+      "type": "vertical",
+      "label": ""
+    }
+  ],
+  "metadata": {
+    "created": "2025-04-22T21:00:32.172565",
+    "modified": "2025-04-22T21:00:32.172579",
+    "version": "1.0"
+  }
+}

@@ -8,10 +8,10 @@
   background-color: #f5f5f5;
   border-right: 1px solid #ddd;
   padding: 10px;
-  max-height: calc(100vh - 130px); 
+  height: 100%;                /* Stretches with .main-container */
   overflow-y: auto;
-  scrollbar-width: thin; 
-  scrollbar-color: #aaa #f5f5f5; 
+  scrollbar-width: thin;
+  scrollbar-color: #aaa #f5f5f5;
 }
 
 .sidebar::-webkit-scrollbar {

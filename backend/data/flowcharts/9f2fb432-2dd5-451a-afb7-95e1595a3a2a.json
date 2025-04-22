@@ -1,0 +1,38 @@
+{
+  "id": "9f2fb432-2dd5-451a-afb7-95e1595a3a2a",
+  "title": "Untitled Flowchart",
+  "nodes": [
+    {
+      "id": "start_NaN",
+      "type": "start",
+      "text": "Start",
+      "position": {
+        "x": 535,
+        "y": 55
+      },
+      "size": {
+        "width": 65,
+        "height": 49.60000228881836
+      }
+    },
+    {
+      "id": "end_NaN",
+      "type": "end",
+      "text": "End",
+      "position": {
+        "x": 538,
+        "y": 661
+      },
+      "size": {
+        "width": 59.67499923706055,
+        "height": 49.60000228881836
+      }
+    }
+  ],
+  "connections": [],
+  "metadata": {
+    "created": "2025-04-22T20:52:52.599943",
+    "modified": "2025-04-22T20:52:52.599953",
+    "version": "1.0"
+  }
+}

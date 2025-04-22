@@ -15,53 +15,67 @@
   background-color: #e8e8e8;
 }
 
-.start-end {
+/* ----------------- Shape Specific Styles ----------------- */
+.canvas-start-end {
   width: 120px;
   height: 60px;
   border: 2px solid #36c;
   border-radius: 30px;
-  background-color: rgba(51, 102, 204, 0.1);
+  background-color: rgba(51, 102, 204, 0.1);  /* Blue shade */
 }
 
-.process {
+.canvas-process {
   width: 120px;
   height: 60px;
   border: 2px solid #4caf50;
-  background-color: rgba(76, 175, 80, 0.1);
+  background-color: rgba(76, 175, 80, 0.1);  /* Green shade */
 }
 
-.decision {
+.canvas-decision { 
   width: 100px;
   height: 100px;
-  border: 2px solid #ffc107;
-  background-color: rgba(255, 193, 7, 0.1);
+  background-color: rgba(249, 195, 32, 0.1);
+  border: 2px solid #f9c320;
   transform: rotate(45deg);
   position: relative;
+  box-shadow: 0 0 10px #e2c97d;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 0 10px #2196f3;
+  overflow: hidden;
+  margin: 0 auto; 
 }
 
 .decision-text {
   transform: rotate(-45deg);
-  font-size: 16px;
-  text-align: center;
-  width: 100%;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(-45deg);
-  pointer-events: none;
 }
 
+.canvas-parallelogram {
+  width: 100px;
+  height: 100px;
+  background-color: rgba(249, 32, 220, 0.1);
+  border: 2px solid #f920dc;
+  position: relative;
+  box-shadow: 0 0 10px #f9ade7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  margin: 0 auto;
+  transform: skew(-20deg);
+}
 
-.connector {
+.parallelogram-text {
+  transform: skew(20deg);
+}
+
+/* ----------------- Connector & Arrow Styles ----------------- */
+.canvas-connector {
   position: absolute;
   z-index: 0;
 }
 
-.connector-label {
+.canvas-connector-label {
   position: absolute;
   background-color: white;
   padding: 2px 5px;
@@ -69,33 +83,18 @@
   font-size: 12px;
 }
 
-.oval {
-  border-radius: 50%;
+.canvas-connector.dashed {
+  stroke-dasharray: 4;
 }
 
-.diamond {
-  transform: rotate(45deg);
-}
-
-.diamond span {
-  transform: rotate(-45deg);
-}
-
-.parallelogram {
-  transform: skew(-20deg);
-}
-
-.parallelogram span {
-  transform: skew(10deg);
-}
-
-.arrow {
+.canvas-arrow {
   position: absolute;
   background-color: #000;
   width: 2px;
 }
 
-.shape-input {
+/* ----------------- Input Box ----------------- */
+.canvas-input {
   width: 100%;
   padding: 5px;
   border: 1px solid #ccc;
@@ -104,10 +103,12 @@
   text-align: center;
 }
 
-.shape-item, .tool-item, .node {
-  transition: background-color 0.3s ease, transform 0.3s ease;
+/* ----------------- Node Selection Highlight ----------------- */
+.canvas-node.selected {
+  border: 2px solid #ff5722;
 }
 
-.connector.dashed {
-  stroke-dasharray: 4;
+.canvas-node .canvas-node-text[contenteditable="true"] {
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px dashed #333;
 }
