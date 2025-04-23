@@ -44,8 +44,8 @@ FlowCraft is a simple and intuitive flowchart maker that allows users to create,
 - JavaScript
 
 **2. Backend**
-- **Python (Flask / FastAPI / SimpleHTTPServer)
-- **Javascript
+- Python (Flask / FastAPI / SimpleHTTPServer)
+- Javascript
 
 ## Directory Structure
 For detailed information about the project's structure, please refer to the [Directory Structure](directory_structure.md) document.
