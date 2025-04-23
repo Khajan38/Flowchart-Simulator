@@ -155,7 +155,7 @@
                     <div style="position: absolute; right: -1px; top: -3px; width: 0; height: 0; border-left: 6px solid #000; border-top: 4px solid transparent; border-bottom: 4px solid transparent;"></div>
                 </div>
             </div>
-        </div> <hr>
+        </div><hr>
         </div>
         <div class="sidebar-section">
           <div class="sidebar-title">Tools</div>
@@ -175,6 +175,7 @@
       </div>
 
       <div class="canvas cursor-select" id="flowchart-canvas">
+        
           <defs>
             <marker
               id="arrowhead"
@@ -241,38 +242,15 @@
             />
           </div>
           <div class="action-buttons">
-            <button class="action-button btn-danger" id="delete-node-btn">
+            <button class="action-button btn-danger del-button" id="delete-node-btn">
               Delete
             </button>
           </div>
         </div>
-        <hr>
+
         <div class="validation-section">
-          <div class="properties-title">Validation</div>
-
-          <div class="validation-item">
-            <div class="validation-status status-valid"></div>
-            <span>Valid start</span>
-          </div>
-
-          <div class="validation-item">
-            <div class="validation-status status-valid"></div>
-            <span>Valid end</span>
-          </div>
-
-          <div class="validation-item">
-            <div class="validation-status status-valid"></div>
-            <span>No cycles</span>
-          </div>
-
-          <div class="validation-item">
-            <div class="validation-status status-invalid"></div>
-            <span>Disconnected node</span>
-          </div>
-
-          <button class="fix-button">Fix Issues</button>
+          <button class="fix-button">See Issues</button>
         </div>
-      </div>
     </div>
 
     <!-- Status Bar -->

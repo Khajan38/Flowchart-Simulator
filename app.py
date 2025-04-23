@@ -4,11 +4,10 @@ import json
 import os
 import uuid
 from datetime import datetime
-from validation import validate_flowchart
 
 app = Flask(__name__)
 CORS(app)  
-FLOWCHARTS_DIRECTORY = "data/flowcharts/"
+FLOWCHARTS_DIRECTORY = "docs/flowcharts/"
 os.makedirs(FLOWCHARTS_DIRECTORY, exist_ok=True)
 
 class FlowchartModel:
@@ -106,18 +105,6 @@ def delete_flowchart(flowchart_id):
     try:
         os.remove(filename)
         return jsonify({"success": True})
-    except FileNotFoundError:
-        return jsonify({"error": "Flowchart not found"}), 404
-
-@app.route('/api/flowcharts/<flowchart_id>/validate', methods=['POST'])
-def validate(flowchart_id):
-    filename = f"{FLOWCHARTS_DIRECTORY}{flowchart_id}.json"
-    try:
-        with open(filename, 'r') as f:
-            flowchart_data = json.load(f)
-        
-        validation_results = validate_flowchart(flowchart_data)
-        return jsonify(validation_results)
     except FileNotFoundError:
         return jsonify({"error": "Flowchart not found"}), 404
 

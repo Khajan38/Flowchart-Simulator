@@ -1,5 +1,3 @@
-// api.js - Handle all API calls to the backend
-
 const API_BASE_URL = 'http://127.0.0.1:5000/api';
 
 class FlowchartAPI {
@@ -112,20 +110,6 @@ class FlowchartAPI {
    * @param {string} id - The flowchart ID to validate
    * @returns {Promise} Promise with validation results
    */
-  static async validateFlowchart(id) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/flowcharts/${id}/validate`, {
-        method: 'POST',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to validate flowchart');
-      }
-      return await response.json();
-    } catch (error) {
-      console.error(`Error validating flowchart with ID ${id}:`, error);
-      throw error;
-    }
-  }
 }
 
 export default FlowchartAPI;
