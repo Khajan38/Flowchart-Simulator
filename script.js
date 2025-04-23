@@ -23,65 +23,88 @@ const API_URL = "http://localhost:5000/api";
 document.addEventListener("DOMContentLoaded", function () {
   
   // Download App ZIP Logic
-  document
-    .getElementById("downloadApp")
-    .addEventListener("click", async function () {
-      if (typeof JSZip === "undefined") {
-        await loadJSZip();
-      }
-      const zip = new JSZip();
-      const appFiles = [
-        "CSS",
-        "App_Folder/app.js",
-        "App_Folder/styles.css",
-        "App_Folder/assets/logo.png",
-      ];
-
-      try {
-        const fetchPromises = appFiles.map(async (filePath) => {
-          const response = await fetch(filePath);
-          if (!response.ok) throw new Error(`Failed to fetch ${filePath}`);
-          const content = filePath.endsWith(".png")
-            ? await response.blob()
-            : await response.text();
-          const fileName = filePath.split("/").pop();
-          zip.file(fileName, content);
-          return fileName;
-        });
-
-        await Promise.all(fetchPromises);
-        const zipBlob = await zip.generateAsync({
-          type: "blob",
-          compression: "DEFLATE",
-          compressionOptions: { level: 6 },
-        });
-        const downloadLink = document.createElement("a");
-        downloadLink.href = URL.createObjectURL(zipBlob);
-        downloadLink.download = "app-package.zip";
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-        URL.revokeObjectURL(downloadLink.href);
-      } catch (error) {
-        console.error("Error creating app zip file:", error);
-        alert("Failed to download app files. Please check the console.");
-      }
-    });
-
-  // Load JSZip dynamically if needed
+  document.getElementById("downloadApp").addEventListener("click", async function () {
+    if (typeof JSZip === "undefined") {
+      await loadJSZip();
+    }
+    const zip = new JSZip();
+  
+    // Full list of files from your screenshots
+    const filesToZip = [
+      { path: "app.py", folder: "" },
+      { path: "api.js", folder: "" },
+      { path: "index.html", folder: "" },
+      { path: "developer.html", folder: "" },
+      { path: "models.json", folder: "" },
+      { path: "README.md", folder: "" },
+      { path: "requirements.txt", folder: "" },
+      { path: "script.js", folder: "" },
+      
+      // CSS Folder
+      { path: "CSS/canvas_status.css", folder: "CSS" },
+      { path: "CSS/dev_main.css", folder: "CSS" },
+      { path: "CSS/development.css", folder: "CSS" },
+      { path: "CSS/navbar.css", folder: "CSS" },
+      { path: "CSS/node.css", folder: "CSS" },
+      { path: "CSS/properties.css", folder: "CSS" },
+      { path: "CSS/shapes.css", folder: "CSS" },
+      { path: "CSS/sidebar.css", folder: "CSS" },
+      { path: "CSS/style.css", folder: "CSS" },
+  
+      // dependencies images
+      { path: "dependencies/Deepak_Singh.jpg", folder: "dependencies" },
+      { path: "dependencies/Dhruv_Rawat.jpg", folder: "dependencies" },
+      { path: "dependencies/Khajan_Bhatt.jpg", folder: "dependencies" },
+      { path: "dependencies/Vineet_Pandey.jpg", folder: "dependencies" },
+      { path: "dependencies/logoipsum-370.svg", folder: "dependencies" },
+  
+      // docs
+      { path: "docs/flowcharts/FLOWCHART SIMULATOR.docx", folder: "docs/flowcharts" },
+      { path: "docs/flowcharts/Flowchart.jpg", folder: "docs/flowcharts" }
+    ];
+  
+    try {
+      const fetchPromises = filesToZip.map(async ({ path, folder }) => {
+        const response = await fetch(path);
+        if (!response.ok) throw new Error(`Failed to fetch ${path}`);
+        const content = path.match(/\.(jpg|jpeg|png|svg|gif)$/i)
+          ? await response.blob()
+          : await response.text();
+        zip.folder(folder).file(path.split("/").pop(), content);
+      });
+  
+      await Promise.all(fetchPromises);
+  
+      const zipBlob = await zip.generateAsync({
+        type: "blob",
+        compression: "DEFLATE",
+        compressionOptions: { level: 6 },
+      });
+  
+      const downloadLink = document.createElement("a");
+      downloadLink.href = URL.createObjectURL(zipBlob);
+      downloadLink.download = "FlowCraftProject.zip";
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(downloadLink.href);
+  
+    } catch (error) {
+      console.error("Error creating app zip file:", error);
+      alert("Failed to download app files. Please check the console.");
+    }
+  });
+  
+  // JSZip loader
   function loadJSZip() {
     return new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src =
-        "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
-      script.integrity =
-        "sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==";
-      script.crossOrigin = "anonymous";
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
       script.onload = resolve;
       script.onerror = () => reject(new Error("Failed to load JSZip library"));
       document.head.appendChild(script);
     });
-  }
+  }  
 
   // Function to get all flowcharts
   async function fetchAllFlowcharts() {
