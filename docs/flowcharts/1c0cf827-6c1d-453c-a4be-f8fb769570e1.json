@@ -1,0 +1,86 @@
+{
+  "id": "1c0cf827-6c1d-453c-a4be-f8fb769570e1",
+  "title": "FlowCraft",
+  "nodes": [
+    {
+      "id": "start_NaN",
+      "type": "start",
+      "text": "Start",
+      "position": {
+        "x": 358,
+        "y": 84
+      },
+      "size": {
+        "width": 97.79167175292969,
+        "height": 42.66666793823242
+      }
+    },
+    {
+      "id": "decision_2",
+      "type": "decision",
+      "text": "Decision",
+      "position": {
+        "x": 343,
+        "y": 200
+      },
+      "size": {
+        "width": 177.29232788085938,
+        "height": 177.29229736328125
+      }
+    },
+    {
+      "id": "process_1",
+      "type": "process",
+      "text": "Process",
+      "position": {
+        "x": 344,
+        "y": 430
+      },
+      "size": {
+        "width": 121.80208587646484,
+        "height": 42.66666793823242
+      }
+    },
+    {
+      "id": "input_2",
+      "type": "input_output",
+      "text": "Input/Output",
+      "position": {
+        "x": 610,
+        "y": 428
+      },
+      "size": {
+        "width": 167.59188842773438,
+        "height": 42.66666793823242
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "connector_4",
+      "source": "decision_2",
+      "target": "start_NaN",
+      "type": "straight",
+      "label": ""
+    },
+    {
+      "id": "connector_5",
+      "source": "decision_2",
+      "target": "process_1",
+      "type": "straight",
+      "label": ""
+    },
+    {
+      "id": "connector_6",
+      "source": "decision_2",
+      "target": "input_2",
+      "type": "straight",
+      "label": ""
+    }
+  ],
+  "metadata": {
+    "created": "2025-04-23T10:44:12.091740",
+    "modified": "2025-04-23T10:44:12.091740",
+    "version": "1.0"
+  }
+}

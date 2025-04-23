@@ -1,0 +1,56 @@
+# === Node & Web ===
+node_modules/
+dist/
+build/
+*.log
+npm-debug.log*
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.Python
+*.env
+*.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# === Your virtual environment ===
+myenv/
+
+# === System Files ===
+.DS_Store
+Thumbs.db
+
+# === IDEs ===
+.vscode/
+.idea/
+
+# === OS Files ===
+ehthumbs.db
+Icon?
+desktop.ini
+
+# === Environment Variables or Secrets ===
+.env
+*.env.local
+
+# === Backup Files ===
+*.bak
+*.tmp
+*.swp
+*.swo
+
+# === Coverage or Test Files ===
+htmlcov/
+coverage.xml
+*.cover
+.cache/
+.tox/
+nosetests.xml
+test-results/
