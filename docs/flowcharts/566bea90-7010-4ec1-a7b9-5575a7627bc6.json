@@ -1,0 +1,153 @@
+{
+  "id": "566bea90-7010-4ec1-a7b9-5575a7627bc6",
+  "title": "FlowCraft",
+  "nodes": [
+    {
+      "id": "start_NaN",
+      "type": "start",
+      "text": "Start",
+      "position": {
+        "x": 275,
+        "y": 71
+      },
+      "size": {
+        "width": 97.79167175292969,
+        "height": 42.66666793823242
+      }
+    },
+    {
+      "id": "decision_1",
+      "type": "decision",
+      "text": "Decision",
+      "position": {
+        "x": 269,
+        "y": 267
+      },
+      "size": {
+        "width": 177.29232788085938,
+        "height": 177.29229736328125
+      }
+    },
+    {
+      "id": "process_2",
+      "type": "process",
+      "text": "Process",
+      "position": {
+        "x": 62,
+        "y": 309
+      },
+      "size": {
+        "width": 121.80208587646484,
+        "height": 42.66666793823242
+      }
+    },
+    {
+      "id": "process_4",
+      "type": "process",
+      "text": "Process",
+      "position": {
+        "x": 262,
+        "y": 160
+      },
+      "size": {
+        "width": 121.80208587646484,
+        "height": 42.66666793823242
+      }
+    },
+    {
+      "id": "end_NaN",
+      "type": "end",
+      "text": "End",
+      "position": {
+        "x": 297,
+        "y": 442
+      },
+      "size": {
+        "width": 92.46875,
+        "height": 42.66666793823242
+      }
+    },
+    {
+      "id": "process_5",
+      "type": "process",
+      "text": "Process",
+      "position": {
+        "x": 609,
+        "y": 442
+      },
+      "size": {
+        "width": 121.80208587646484,
+        "height": 42.66666793823242
+      }
+    },
+    {
+      "id": "input_1",
+      "type": "input_output",
+      "text": "Input/Output",
+      "position": {
+        "x": 593,
+        "y": 308
+      },
+      "size": {
+        "width": 167.59188842773438,
+        "height": 42.66666793823242
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "connector_3",
+      "source": "start_NaN",
+      "target": "process_4",
+      "type": "straight",
+      "label": ""
+    },
+    {
+      "id": "connector_4",
+      "source": "process_4",
+      "target": "decision_1",
+      "type": "straight",
+      "label": ""
+    },
+    {
+      "id": "connector_6",
+      "source": "decision_1",
+      "target": "process_2",
+      "type": "straight",
+      "label": ""
+    },
+    {
+      "id": "connector_8",
+      "source": "process_2",
+      "target": "end_NaN",
+      "type": "straight",
+      "label": ""
+    },
+    {
+      "id": "connector_9",
+      "source": "decision_1",
+      "target": "input_1",
+      "type": "straight",
+      "label": ""
+    },
+    {
+      "id": "connector_10",
+      "source": "input_1",
+      "target": "process_5",
+      "type": "straight",
+      "label": ""
+    },
+    {
+      "id": "connector_11",
+      "source": "process_5",
+      "target": "end_NaN",
+      "type": "straight",
+      "label": ""
+    }
+  ],
+  "metadata": {
+    "created": "2025-04-23T11:08:31.154404",
+    "modified": "2025-04-23T11:08:31.154404",
+    "version": "1.0"
+  }
+}
