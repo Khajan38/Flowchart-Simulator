@@ -12,16 +12,77 @@ let connectMode = false;
 let firstNode = null;
 let svgConnectors = {};
 let nodeCounter = {
-"start-end": 1,
-process: 1,
-decision: 1,
-parallelogram: 1,
-connector: 1,
+  "start-end": 1,
+  process: 1,
+  decision: 1,
+  parallelogram: 1,
+  connector: 1,
 };
 const API_URL = "http://localhost:5000/api";
 
 document.addEventListener("DOMContentLoaded", function () {
-	
+  
+  // Download App ZIP Logic
+  document
+    .getElementById("downloadApp")
+    .addEventListener("click", async function () {
+      if (typeof JSZip === "undefined") {
+        await loadJSZip();
+      }
+      const zip = new JSZip();
+      const appFiles = [
+        "CSS",
+        "App_Folder/app.js",
+        "App_Folder/styles.css",
+        "App_Folder/assets/logo.png",
+      ];
+
+      try {
+        const fetchPromises = appFiles.map(async (filePath) => {
+          const response = await fetch(filePath);
+          if (!response.ok) throw new Error(`Failed to fetch ${filePath}`);
+          const content = filePath.endsWith(".png")
+            ? await response.blob()
+            : await response.text();
+          const fileName = filePath.split("/").pop();
+          zip.file(fileName, content);
+          return fileName;
+        });
+
+        await Promise.all(fetchPromises);
+        const zipBlob = await zip.generateAsync({
+          type: "blob",
+          compression: "DEFLATE",
+          compressionOptions: { level: 6 },
+        });
+        const downloadLink = document.createElement("a");
+        downloadLink.href = URL.createObjectURL(zipBlob);
+        downloadLink.download = "app-package.zip";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        URL.revokeObjectURL(downloadLink.href);
+      } catch (error) {
+        console.error("Error creating app zip file:", error);
+        alert("Failed to download app files. Please check the console.");
+      }
+    });
+
+  // Load JSZip dynamically if needed
+  function loadJSZip() {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src =
+        "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+      script.integrity =
+        "sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==";
+      script.crossOrigin = "anonymous";
+      script.onload = resolve;
+      script.onerror = () => reject(new Error("Failed to load JSZip library"));
+      document.head.appendChild(script);
+    });
+  }
+
   // Function to get all flowcharts
   async function fetchAllFlowcharts() {
     try {
@@ -1087,30 +1148,31 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Delete node function
-  
+
   function deleteNode(node) {
-    
-      const nodeId = node.getAttribute("data-id");
-  
-  // If this is a connector, delete it directly
-  if (node.classList.contains('connector')) {
-    // Remove the corresponding SVG path
-    const connectorId = node.getAttribute("data-id");
-    if (connectorId && svgConnectors[connectorId]) {
-      const svgPath = svgConnectors[connectorId].path;
-      if (svgPath && svgPath.parentNode) {
-        svgPath.parentNode.removeChild(svgPath);
+    const nodeId = node.getAttribute("data-id");
+
+    // If this is a connector, delete it directly
+    if (node.classList.contains("connector")) {
+      // Remove the corresponding SVG path
+      const connectorId = node.getAttribute("data-id");
+      if (connectorId && svgConnectors[connectorId]) {
+        const svgPath = svgConnectors[connectorId].path;
+        if (svgPath && svgPath.parentNode) {
+          svgPath.parentNode.removeChild(svgPath);
+        }
+        delete svgConnectors[connectorId];
       }
-      delete svgConnectors[connectorId];
-    }
       const connectionsCount = document.getElementById("connections-count");
       const currentConnections = parseInt(connectionsCount.textContent) - 1;
       connectionsCount.textContent = Math.max(0, currentConnections);
-    }else{
-      const connectors=document.querySelectorAll(`.connector[data-source="${nodeId}"], .connector[data-target="${nodeId}"]`);
-      connectors.forEach(connector => {
+    } else {
+      const connectors = document.querySelectorAll(
+        `.connector[data-source="${nodeId}"], .connector[data-target="${nodeId}"]`
+      );
+      connectors.forEach((connector) => {
         const connectorId = connector.getAttribute("data-id");
-        
+
         // Remove the SVG path associated with this connector
         if (connectorId && svgConnectors[connectorId]) {
           const svgPath = svgConnectors[connectorId].path;
@@ -1119,40 +1181,42 @@ document.addEventListener("DOMContentLoaded", function () {
           }
           delete svgConnectors[connectorId];
         }
-        
+
         // Remove the connector element
         connector.remove();
-        
+
         // Update the connections count
         const connectionsCount = document.getElementById("connections-count");
         const currentConnections = parseInt(connectionsCount.textContent) - 1;
         connectionsCount.textContent = Math.max(0, currentConnections);
       });
-      
+
       // Additionally, find and remove SVG connectors directly
-      const svgConnectorIds = Object.keys(svgConnectors).filter(id => {
+      const svgConnectorIds = Object.keys(svgConnectors).filter((id) => {
         const conn = svgConnectors[id];
-        return conn.source.getAttribute("data-id") === nodeId || 
-               conn.target.getAttribute("data-id") === nodeId;
+        return (
+          conn.source.getAttribute("data-id") === nodeId ||
+          conn.target.getAttribute("data-id") === nodeId
+        );
       });
-      
-      svgConnectorIds.forEach(id => {
+
+      svgConnectorIds.forEach((id) => {
         const conn = svgConnectors[id];
         if (conn.path && conn.path.parentNode) {
           conn.path.parentNode.removeChild(conn.path);
         }
         delete svgConnectors[id];
-        
+
         // Also remove any connector divs that might have been missed
-        const connectorDiv = document.querySelector(`.connector[data-id="${id}"]`);
+        const connectorDiv = document.querySelector(
+          `.connector[data-id="${id}"]`
+        );
         if (connectorDiv) {
           connectorDiv.remove();
         }
       });
     }
-    
 
-    
     node.remove();
     updateNodeCount();
     updateConnectionsCount();
@@ -1244,7 +1308,7 @@ document.addEventListener("DOMContentLoaded", function () {
         );
         selectedNode.style.left = newX + "px";
         selectedNode.style.top = newY + "px";
-        
+
         // Update all connectors when a node is moved
         updateAllConnectors();
       }
@@ -1272,8 +1336,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (e.key === "Escape") {
       if (inConnectorMode) {
         exitConnectorMode();
-      }
-      else if (selectedNode) {
+      } else if (selectedNode) {
         selectedNode.classList.remove("selected");
         selectedNode = null;
         updatePropertiesPanel(null);
@@ -1300,52 +1363,60 @@ function collectFlowchartData() {
   const nodes = [];
   const connections = [];
   const nodeElements = document.querySelectorAll(".node");
-  nodeElements.forEach(node => {
-    if (node.classList.contains('connector')) return;
+  nodeElements.forEach((node) => {
+    if (node.classList.contains("connector")) return;
     const nodeId = node.getAttribute("data-id");
     const textElement = node.querySelector(".node-text");
     const text = textElement ? textElement.textContent : "";
     const rect = node.getBoundingClientRect();
-    const canvasRect = document.getElementById("flowchart-canvas").getBoundingClientRect();
+    const canvasRect = document
+      .getElementById("flowchart-canvas")
+      .getBoundingClientRect();
     let nodeType = "process";
     if (node.classList.contains("start-end")) {
       if (nodeId.startsWith("start")) nodeType = "start";
       else if (nodeId.startsWith("end")) nodeType = "end";
     } else if (node.classList.contains("process")) {
       nodeType = "process";
-    } else if (node.classList.contains("canvas-decision") || nodeId.startsWith("decision")) {
+    } else if (
+      node.classList.contains("canvas-decision") ||
+      nodeId.startsWith("decision")
+    ) {
       nodeType = "decision";
-    } else if (node.classList.contains("canvas-parallelogram") || nodeId.startsWith("input")) {
+    } else if (
+      node.classList.contains("canvas-parallelogram") ||
+      nodeId.startsWith("input")
+    ) {
       nodeType = "parallelogram";
     }
-    
+
     nodes.push({
       id: nodeId,
       type: nodeType,
       text: text,
       position: {
         x: parseInt(node.style.left, 10) || 0,
-        y: parseInt(node.style.top, 10) || 0
+        y: parseInt(node.style.top, 10) || 0,
       },
       dimensions: {
         width: node.offsetWidth,
-        height: node.offsetHeight
+        height: node.offsetHeight,
       },
       style: {
         color: getComputedStyle(node).color,
         backgroundColor: getComputedStyle(node).backgroundColor,
-        borderColor: getComputedStyle(node).borderColor
-      }
+        borderColor: getComputedStyle(node).borderColor,
+      },
     });
   });
-  
+
   // Process connector elements
-  document.querySelectorAll(".connector").forEach(connector => {
+  document.querySelectorAll(".connector").forEach((connector) => {
     const connectorId = connector.getAttribute("data-id");
     const sourceId = connector.getAttribute("data-source");
     const targetId = connector.getAttribute("data-target");
     const connectorType = connector.getAttribute("data-type") || "straight";
-    
+
     connections.push({
       id: connectorId,
       sourceId: sourceId,
@@ -1355,11 +1426,11 @@ function collectFlowchartData() {
       style: {
         lineColor: "#000",
         lineWidth: 2,
-        dashed: false
-      }
+        dashed: false,
+      },
     });
   });
-  
+
   // Process SVG path connectors (from the initial example)
   const paths = document.querySelectorAll("#connectors-svg path");
   paths.forEach((path, index) => {
@@ -1372,20 +1443,21 @@ function collectFlowchartData() {
       style: {
         lineColor: path.getAttribute("stroke") || "#000",
         lineWidth: parseInt(path.getAttribute("stroke-width"), 10) || 2,
-        dashed: path.getAttribute("stroke-dasharray") ? true : false
-      }
+        dashed: path.getAttribute("stroke-dasharray") ? true : false,
+      },
     });
   });
-  
+
   return {
-    title: document.title.replace("- FlowCraft", "").trim() || "Untitled Flowchart",
+    title:
+      document.title.replace("- FlowCraft", "").trim() || "Untitled Flowchart",
     nodes: nodes,
     connections: connections,
     metadata: {
       created: new Date().toISOString(),
       modified: new Date().toISOString(),
-      version: "1.0"
-    }
+      version: "1.0",
+    },
   };
 }
 
@@ -1397,26 +1469,26 @@ async function saveFlowchart() {
     let response;
     if (currentFlowchartId) {
       response = await fetch(`/api/flowcharts/${currentFlowchartId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(flowchartData)
+        body: JSON.stringify(flowchartData),
       });
     } else {
-      response = await fetch('/api/flowcharts', {
-        method: 'POST',
+      response = await fetch("/api/flowcharts", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(flowchartData)
+        body: JSON.stringify(flowchartData),
       });
       const data = await response.json();
       if (data.id) {
         localStorage.setItem("currentFlowchartId", data.id);
       }
     }
-    
+
     return response.ok;
   } catch (error) {
     console.error("Error saving flowchart:", error);
@@ -1431,13 +1503,13 @@ async function loadFlowchart(flowchartId) {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const flowchartData = await response.json();
     renderFlowchartFromData(flowchartData);
-    
+
     // Store the current flowchart ID
     localStorage.setItem("currentFlowchartId", flowchartId);
-    
+
     return true;
   } catch (error) {
     console.error("Error loading flowchart:", error);
@@ -1448,11 +1520,11 @@ async function loadFlowchart(flowchartId) {
 // Function to fetch all flowcharts
 async function getAllFlowcharts() {
   try {
-    const response = await fetch('/api/flowcharts');
+    const response = await fetch("/api/flowcharts");
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error("Error fetching flowcharts:", error);
@@ -1465,15 +1537,18 @@ async function validateFlowchart() {
   try {
     const currentFlowchartId = localStorage.getItem("currentFlowchartId");
     if (!currentFlowchartId) return null;
-    
-    const response = await fetch(`/api/flowcharts/${currentFlowchartId}/validate`, {
-      method: 'POST'
-    });
-    
+
+    const response = await fetch(
+      `/api/flowcharts/${currentFlowchartId}/validate`,
+      {
+        method: "POST",
+      }
+    );
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error("Error validating flowchart:", error);
@@ -1486,25 +1561,31 @@ function renderFlowchartFromData(flowchartData) {
   const canvas = document.getElementById("flowchart-canvas");
   const svgContainer = document.getElementById("connectors-svg");
   const nodesToRemove = document.querySelectorAll(".node");
-  nodesToRemove.forEach(node => node.remove());
+  nodesToRemove.forEach((node) => node.remove());
   while (svgContainer.firstChild) {
     svgContainer.removeChild(svgContainer.firstChild);
   }
   const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-  const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+  const marker = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "marker"
+  );
   marker.setAttribute("id", "arrowhead");
   marker.setAttribute("markerWidth", "10");
   marker.setAttribute("markerHeight", "7");
   marker.setAttribute("refX", "9");
   marker.setAttribute("refY", "3.5");
   marker.setAttribute("orient", "auto");
-  const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  const polygon = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "polygon"
+  );
   polygon.setAttribute("points", "0 0, 10 3.5, 0 7");
   polygon.setAttribute("fill", "#000");
   marker.appendChild(polygon);
   defs.appendChild(marker);
   svgContainer.appendChild(defs);
-  flowchartData.nodes.forEach(nodeData => {
+  flowchartData.nodes.forEach((nodeData) => {
     const node = document.createElement("div");
     node.className = "node";
     node.setAttribute("data-id", nodeData.id);
@@ -1552,15 +1633,18 @@ function renderFlowchartFromData(flowchartData) {
     }
     canvas.appendChild(node);
   });
-  flowchartData.connections.forEach(conn => {
+  flowchartData.connections.forEach((conn) => {
     if (conn.type === "path") {
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      const path = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path"
+      );
       path.setAttribute("d", conn.path);
       path.setAttribute("stroke", conn.style.lineColor);
       path.setAttribute("stroke-width", conn.style.lineWidth);
       path.setAttribute("fill", "none");
       path.setAttribute("marker-end", "url(#arrowhead)");
-      
+
       if (conn.style.dashed) {
         path.setAttribute("stroke-dasharray", "5,5");
       }
@@ -1577,71 +1661,101 @@ function renderFlowchartFromData(flowchartData) {
         connector.setAttribute("data-source", conn.sourceId);
         connector.setAttribute("data-target", conn.targetId);
         connector.setAttribute("data-type", conn.type);
-        
+
         if (conn.label) {
           connector.setAttribute("data-label", conn.label);
         }
-        
+
         // Calculate connector position and dimensions (simplified)
         const sourceRect = sourceNode.getBoundingClientRect();
         const targetRect = targetNode.getBoundingClientRect();
         const canvasRect = canvas.getBoundingClientRect();
-        
-        const isHorizontal = conn.type === 'horizontal';
+
+        const isHorizontal = conn.type === "horizontal";
         let x, y, width, height;
-        
+
         if (isHorizontal) {
-          const leftRect = sourceRect.left < targetRect.left ? sourceRect : targetRect;
-          const rightRect = sourceRect.left < targetRect.left ? targetRect : sourceRect;
-          
+          const leftRect =
+            sourceRect.left < targetRect.left ? sourceRect : targetRect;
+          const rightRect =
+            sourceRect.left < targetRect.left ? targetRect : sourceRect;
+
           x = leftRect.right - canvasRect.left;
-          y = (sourceRect.top + sourceRect.height/2 + targetRect.top + targetRect.height/2)/2 - canvasRect.top - 10;
+          y =
+            (sourceRect.top +
+              sourceRect.height / 2 +
+              targetRect.top +
+              targetRect.height / 2) /
+              2 -
+            canvasRect.top -
+            10;
           width = rightRect.left - leftRect.right;
           height = 20;
-          
+
           connector.innerHTML = `
             <svg width="${width}" height="${height}" class="connector-svg">
               <defs>
-                <marker id="arrowhead_conn_${conn.id}" markerWidth="10" markerHeight="7" 
+                <marker id="arrowhead_conn_${
+                  conn.id
+                }" markerWidth="10" markerHeight="7" 
                 refX="9" refY="3.5" orient="auto">
                   <polygon points="0 0, 10 3.5, 0 7" fill="#000" />
                 </marker>
               </defs>
-              <line x1="0" y1="${height/2}" x2="${width - 5}" y2="${height/2}" 
-                    stroke="#000" stroke-width="2" marker-end="url(#arrowhead_conn_${conn.id})" />
+              <line x1="0" y1="${height / 2}" x2="${width - 5}" y2="${
+            height / 2
+          }" 
+                    stroke="#000" stroke-width="2" marker-end="url(#arrowhead_conn_${
+                      conn.id
+                    })" />
             </svg>
           `;
         } else {
-          const topRect = sourceRect.top < targetRect.top ? sourceRect : targetRect;
-          const bottomRect = sourceRect.top < targetRect.top ? targetRect : sourceRect;
-          
-          x = (sourceRect.left + sourceRect.width/2 + targetRect.left + targetRect.width/2)/2 - canvasRect.left - 10;
+          const topRect =
+            sourceRect.top < targetRect.top ? sourceRect : targetRect;
+          const bottomRect =
+            sourceRect.top < targetRect.top ? targetRect : sourceRect;
+
+          x =
+            (sourceRect.left +
+              sourceRect.width / 2 +
+              targetRect.left +
+              targetRect.width / 2) /
+              2 -
+            canvasRect.left -
+            10;
           y = topRect.bottom - canvasRect.top;
           width = 20;
           height = bottomRect.top - topRect.bottom;
-          
+
           connector.innerHTML = `
             <svg width="${width}" height="${height}" class="connector-svg">
               <defs>
-                <marker id="arrowhead_conn_${conn.id}" markerWidth="10" markerHeight="7" 
+                <marker id="arrowhead_conn_${
+                  conn.id
+                }" markerWidth="10" markerHeight="7" 
                 refX="9" refY="3.5" orient="auto">
                   <polygon points="0 0, 10 3.5, 0 7" fill="#000" />
                 </marker>
               </defs>
-              <line x1="${width/2}" y1="0" x2="${width/2}" y2="${height - 5}" 
-                    stroke="#000" stroke-width="2" marker-end="url(#arrowhead_conn_${conn.id})" />
+              <line x1="${width / 2}" y1="0" x2="${width / 2}" y2="${
+            height - 5
+          }" 
+                    stroke="#000" stroke-width="2" marker-end="url(#arrowhead_conn_${
+                      conn.id
+                    })" />
             </svg>
           `;
         }
-        
-        connector.style.position = 'absolute';
-        connector.style.left = x + 'px';
-        connector.style.top = y + 'px';
-        connector.style.width = width + 'px';
-        connector.style.height = height + 'px';
-        connector.style.pointerEvents = 'all';
-        connector.style.zIndex = '10';
-        
+
+        connector.style.position = "absolute";
+        connector.style.left = x + "px";
+        connector.style.top = y + "px";
+        connector.style.width = width + "px";
+        connector.style.height = height + "px";
+        connector.style.pointerEvents = "all";
+        connector.style.zIndex = "10";
+
         canvas.appendChild(connector);
       }
     }
@@ -1654,16 +1768,16 @@ function renderFlowchartFromData(flowchartData) {
 
 // Utility function to setup interactions for all nodes
 function setupAllNodeInteractions() {
-  document.querySelectorAll(".node").forEach(node => {
+  document.querySelectorAll(".node").forEach((node) => {
     setupNodeInteractions(node);
   });
 }
 
 // Initialize save button event listeners
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
   const saveButton = document.querySelector(".btn-primary.btn-outline-primary");
   if (saveButton) {
-    saveButton.addEventListener("click", async function() {
+    saveButton.addEventListener("click", async function () {
       const success = await saveFlowchart();
       if (success) {
         alert("Flowchart saved successfully!");
@@ -1672,19 +1786,21 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     });
   }
-  
+
   // Add Open button event listener
   const openButton = document.querySelector(".btn-secondary:nth-child(2)");
   if (openButton) {
-    openButton.addEventListener("click", async function() {
+    openButton.addEventListener("click", async function () {
       const flowcharts = await getAllFlowcharts();
       if (flowcharts.length === 0) {
         alert("No flowcharts found. Create and save one first!");
         return;
       }
-      const list = flowcharts.map((fc, i) => `${i+1}. ${fc.title} (${fc.id})`).join("\n");
+      const list = flowcharts
+        .map((fc, i) => `${i + 1}. ${fc.title} (${fc.id})`)
+        .join("\n");
       const selection = prompt(`Select a flowchart by number:\n${list}`);
-      
+
       if (selection && !isNaN(selection)) {
         const index = parseInt(selection) - 1;
         if (index >= 0 && index < flowcharts.length) {
@@ -1693,22 +1809,22 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     });
   }
-  
+
   // Add New button event listener
   const newButton = document.querySelector(".btn-secondary:first-child");
   if (newButton) {
-    newButton.addEventListener("click", function() {
+    newButton.addEventListener("click", function () {
       if (confirm("Create a new flowchart? Unsaved changes will be lost.")) {
         localStorage.removeItem("currentFlowchartId");
         location.reload();
       }
     });
   }
-  
+
   // Add validation button event listener
   const validateButton = document.querySelector(".fix-button");
   if (validateButton) {
-    validateButton.addEventListener("click", async function() {
+    validateButton.addEventListener("click", async function () {
       const validationResults = await validateFlowchart();
       if (validationResults) {
         updateValidationUI(validationResults);
@@ -1720,19 +1836,23 @@ document.addEventListener("DOMContentLoaded", function() {
 // Function to update the validation UI based on API response
 function updateValidationUI(validationResults) {
   const validationItems = document.querySelectorAll(".validation-item");
-  validationItems.forEach(item => {
+  validationItems.forEach((item) => {
     const status = item.querySelector(".validation-status");
     status.className = "validation-status";
-    status.classList.add(item.getAttribute("data-default-status") || "status-valid");
+    status.classList.add(
+      item.getAttribute("data-default-status") || "status-valid"
+    );
   });
   if (validationResults.valid) {
-    validationItems.forEach(item => {
+    validationItems.forEach((item) => {
       const status = item.querySelector(".validation-status");
       status.className = "validation-status status-valid";
     });
   } else {
     for (const [key, value] of Object.entries(validationResults.details)) {
-      const item = document.querySelector(`.validation-item[data-validation="${key}"]`);
+      const item = document.querySelector(
+        `.validation-item[data-validation="${key}"]`
+      );
       if (item) {
         const status = item.querySelector(".validation-status");
         status.className = "validation-status";
@@ -1745,10 +1865,10 @@ function updateValidationUI(validationResults) {
 async function validateFlowchart(id) {
   try {
     const response = await fetch(`${API_URL}/flowcharts/${id}/validate`, {
-      method: 'POST',
+      method: "POST",
     });
     if (!response.ok) {
-      throw new Error('Failed to validate flowchart');
+      throw new Error("Failed to validate flowchart");
     }
     return await response.json();
   } catch (error) {
@@ -1761,195 +1881,185 @@ async function validateFlowchart(id) {
 function performClientSideValidation() {
   const errors = [];
   const warnings = [];
-  
-  // Get all nodes and connections
-  const nodes = Array.from(document.querySelectorAll('.node:not(.connector)'));
-  const connections = Array.from(document.querySelectorAll('.connector'));
-  
+  const nodes = Array.from(document.querySelectorAll(".node:not(.connector)"));
+  const connections = Array.from(document.querySelectorAll(".connector"));
+
   // Check 1: Ensure there is at least one start node
-  const startNodes = nodes.filter(node => node.getAttribute('data-id')?.startsWith('start'));
+  const startNodes = nodes.filter((node) =>
+    node.getAttribute("data-id")?.startsWith("start")
+  );
   if (startNodes.length === 0) {
     errors.push({
-      type: 'missing_start',
-      message: 'Flowchart must have a Start node'
+      type: "missing_start",
+      message: "Flowchart must have a Start node",
     });
   } else if (startNodes.length > 1) {
     warnings.push({
-      type: 'multiple_starts',
-      message: 'Multiple Start nodes may cause confusion'
+      type: "multiple_starts",
+      message: "Multiple Start nodes may cause confusion",
     });
   }
-  
+
   // Check 2: Ensure there is at least one end node
-  const endNodes = nodes.filter(node => node.getAttribute('data-id')?.startsWith('end'));
+  const endNodes = nodes.filter((node) =>
+    node.getAttribute("data-id")?.startsWith("end")
+  );
   if (endNodes.length === 0) {
     errors.push({
-      type: 'missing_end',
-      message: 'Flowchart must have an End node'
+      type: "missing_end",
+      message: "Flowchart must have an End node",
     });
   }
-  
+
   // Check 3: Find disconnected nodes (no incoming or outgoing connections)
   const disconnectedNodes = [];
-  nodes.forEach(node => {
-    const nodeId = node.getAttribute('data-id');
-    // Skip Start nodes for incoming check (they don't need incoming connections)
-    const needsIncoming = !nodeId.startsWith('start');
-    // Skip End nodes for outgoing check (they don't need outgoing connections)
-    const needsOutgoing = !nodeId.startsWith('end');
-    
-    const hasIncoming = connections.some(conn => conn.getAttribute('data-target') === nodeId);
-    const hasOutgoing = connections.some(conn => conn.getAttribute('data-source') === nodeId);
-    
+  nodes.forEach((node) => {
+    const nodeId = node.getAttribute("data-id");
+    const needsIncoming = !nodeId.startsWith("start");
+    const needsOutgoing = !nodeId.startsWith("end");
+
+    const hasIncoming = connections.some(
+      (conn) => conn.getAttribute("data-target") === nodeId
+    );
+    const hasOutgoing = connections.some(
+      (conn) => conn.getAttribute("data-source") === nodeId
+    );
+
     if ((needsIncoming && !hasIncoming) || (needsOutgoing && !hasOutgoing)) {
       disconnectedNodes.push({
         node: node,
         nodeId: nodeId,
         missingIncoming: needsIncoming && !hasIncoming,
-        missingOutgoing: needsOutgoing && !hasOutgoing
+        missingOutgoing: needsOutgoing && !hasOutgoing,
       });
     }
   });
-  
+
   if (disconnectedNodes.length > 0) {
     errors.push({
-      type: 'disconnected_nodes',
+      type: "disconnected_nodes",
       message: `${disconnectedNodes.length} node(s) are disconnected`,
-      affectedNodes: disconnectedNodes
+      affectedNodes: disconnectedNodes,
     });
   }
-  
+
   // Check 4: Check for decision nodes without multiple outgoing connections
-  const decisionNodes = nodes.filter(node => 
-    node.classList.contains('canvas-decision') || 
-    node.getAttribute('data-id')?.startsWith('decision')
+  const decisionNodes = nodes.filter(
+    (node) =>
+      node.classList.contains("canvas-decision") ||
+      node.getAttribute("data-id")?.startsWith("decision")
   );
-  
   const badDecisionNodes = [];
-  decisionNodes.forEach(node => {
-    const nodeId = node.getAttribute('data-id');
-    const outgoingConnections = connections.filter(conn => 
-      conn.getAttribute('data-source') === nodeId
+  decisionNodes.forEach((node) => {
+    const nodeId = node.getAttribute("data-id");
+    const outgoingConnections = connections.filter(
+      (conn) => conn.getAttribute("data-source") === nodeId
     );
-    
     if (outgoingConnections.length < 2) {
       badDecisionNodes.push({
         node: node,
         nodeId: nodeId,
-        connections: outgoingConnections.length
+        connections: outgoingConnections.length,
       });
     }
   });
-  
   if (badDecisionNodes.length > 0) {
     errors.push({
-      type: 'decision_without_branches',
+      type: "decision_without_branches",
       message: `${badDecisionNodes.length} decision node(s) don't have multiple branches`,
-      affectedNodes: badDecisionNodes
+      affectedNodes: badDecisionNodes,
     });
   }
-  
+
   // Check 5: Check for cycles in the flow (can indicate an infinite loop)
-  // This is a simplified check that might not catch all cycles
   const potentialCycles = [];
-  connections.forEach(conn => {
-    const sourceId = conn.getAttribute('data-source');
-    const targetId = conn.getAttribute('data-target');
-    
-    // Check if there's a reverse connection
-    const hasReverse = connections.some(c => 
-      c.getAttribute('data-source') === targetId && 
-      c.getAttribute('data-target') === sourceId
+  connections.forEach((conn) => {
+    const sourceId = conn.getAttribute("data-source");
+    const targetId = conn.getAttribute("data-target");
+    const hasReverse = connections.some(
+      (c) =>
+        c.getAttribute("data-source") === targetId &&
+        c.getAttribute("data-target") === sourceId
     );
-    
     if (hasReverse) {
       potentialCycles.push({
         source: sourceId,
         target: targetId,
-        connection: conn
+        connection: conn,
       });
     }
   });
-  
   if (potentialCycles.length > 0) {
     warnings.push({
-      type: 'potential_cycles',
-      message: 'Potential cycles detected in flowchart',
-      cycles: potentialCycles
+      type: "potential_cycles",
+      message: "Potential cycles detected in flowchart",
+      cycles: potentialCycles,
     });
   }
-  
   return {
     isValid: errors.length === 0,
     errors: errors,
-    warnings: warnings
+    warnings: warnings,
   };
 }
 
 // Highlight problem nodes with visual indicators
 function highlightProblemNodes(validationResults) {
-  // First, clear any previous validation highlights
   clearValidationHighlights();
-  
   if (!validationResults) return;
-  
   if (validationResults.errors) {
-    validationResults.errors.forEach(error => {
-      if (error.type === 'disconnected_nodes' && error.affectedNodes) {
-        error.affectedNodes.forEach(info => {
+    validationResults.errors.forEach((error) => {
+      if (error.type === "disconnected_nodes" && error.affectedNodes) {
+        error.affectedNodes.forEach((info) => {
           const node = info.node;
-          node.classList.add('validation-error');
-          
-          // Add specific error indicators
-          const errorIndicator = document.createElement('div');
-          errorIndicator.className = 'error-indicator';
-          errorIndicator.title = info.missingIncoming && info.missingOutgoing ? 
-            'Node is completely disconnected' : 
-            info.missingIncoming ? 'Missing incoming connection' : 'Missing outgoing connection';
-          
-          // Position the indicator based on which connection is missing
+          node.classList.add("validation-error");
+          const errorIndicator = document.createElement("div");
+          errorIndicator.className = "error-indicator";
+          errorIndicator.title =
+            info.missingIncoming && info.missingOutgoing
+              ? "Node is completely disconnected"
+              : info.missingIncoming
+              ? "Missing incoming connection"
+              : "Missing outgoing connection";
           if (info.missingIncoming) {
-            errorIndicator.classList.add('error-incoming');
+            errorIndicator.classList.add("error-incoming");
           }
           if (info.missingOutgoing) {
-            errorIndicator.classList.add('error-outgoing');
+            errorIndicator.classList.add("error-outgoing");
           }
-          
           node.appendChild(errorIndicator);
         });
       }
-      
-      if (error.type === 'decision_without_branches' && error.affectedNodes) {
-        error.affectedNodes.forEach(info => {
+      if (error.type === "decision_without_branches" && error.affectedNodes) {
+        error.affectedNodes.forEach((info) => {
           const node = info.node;
-          node.classList.add('validation-error');
-          
-          const errorIndicator = document.createElement('div');
-          errorIndicator.className = 'error-indicator error-decision';
-          errorIndicator.title = 'Decision node must have at least two outgoing connections';
+          node.classList.add("validation-error");
+          const errorIndicator = document.createElement("div");
+          errorIndicator.className = "error-indicator error-decision";
+          errorIndicator.title =
+            "Decision node must have at least two outgoing connections";
           node.appendChild(errorIndicator);
         });
       }
     });
   }
-  
   if (validationResults.warnings) {
-    validationResults.warnings.forEach(warning => {
-      if (warning.type === 'potential_cycles' && warning.cycles) {
-        warning.cycles.forEach(cycle => {
+    validationResults.warnings.forEach((warning) => {
+      if (warning.type === "potential_cycles" && warning.cycles) {
+        warning.cycles.forEach((cycle) => {
           const conn = cycle.connection;
           if (conn) {
-            const connectorElement = document.querySelector(`.connector[data-id="${conn.getAttribute('data-id')}"]`);
+            const connectorElement = document.querySelector(
+              `.connector[data-id="${conn.getAttribute("data-id")}"]`
+            );
             if (connectorElement) {
-              connectorElement.classList.add('validation-warning');
-              
-              // Also highlight the SVG path if possible
-              const pathId = conn.getAttribute('data-id');
+              connectorElement.classList.add("validation-warning");
+              const pathId = conn.getAttribute("data-id");
               const path = document.querySelector(`path[id="${pathId}"]`);
               if (path) {
-                path.classList.add('path-warning');
-                path.setAttribute('stroke', '#ff9900');
-                path.setAttribute('stroke-dasharray', '5,5');
+                path.classList.add("path-warning");
+                path.setAttribute("stroke", "#ff9900");
+                path.setAttribute("stroke-dasharray", "5,5");
               }
             }
           }
@@ -1961,175 +2071,132 @@ function highlightProblemNodes(validationResults) {
 
 // Clear validation highlights
 function clearValidationHighlights() {
-  document.querySelectorAll('.validation-error').forEach(node => {
-    node.classList.remove('validation-error');
+  document.querySelectorAll(".validation-error").forEach((node) => {
+    node.classList.remove("validation-error");
   });
-  
-  document.querySelectorAll('.validation-warning').forEach(node => {
-    node.classList.remove('validation-warning');
+  document.querySelectorAll(".validation-warning").forEach((node) => {
+    node.classList.remove("validation-warning");
   });
-  
-  document.querySelectorAll('.error-indicator').forEach(indicator => {
+  document.querySelectorAll(".error-indicator").forEach((indicator) => {
     indicator.remove();
   });
-  
-  document.querySelectorAll('.path-warning').forEach(path => {
-    path.classList.remove('path-warning');
-    path.setAttribute('stroke', '#000');
-    path.removeAttribute('stroke-dasharray');
+  document.querySelectorAll(".path-warning").forEach((path) => {
+    path.classList.remove("path-warning");
+    path.setAttribute("stroke", "#000");
+    path.removeAttribute("stroke-dasharray");
   });
 }
 
 // Show validation errors in a user-friendly panel
 function showValidationResults(results) {
-  let validationPanel = document.getElementById('validation-panel');
-  
+  let validationPanel = document.getElementById("validation-panel");
   if (!validationPanel) {
-    validationPanel = document.createElement('div');
-    validationPanel.id = 'validation-panel';
-    validationPanel.className = 'validation-panel';
+    validationPanel = document.createElement("div");
+    validationPanel.id = "validation-panel";
+    validationPanel.className = "validation-panel";
     document.body.appendChild(validationPanel);
   }
-  
-  // Clear existing content
-  validationPanel.innerHTML = '';
-  
-  // Create header
-  const header = document.createElement('div');
-  header.className = 'validation-header';
-  
-  const title = document.createElement('h3');
-  title.textContent = 'Flowchart Validation';
-  
-  const closeBtn = document.createElement('button');
-  closeBtn.innerHTML = '&times;';
-  closeBtn.className = 'close-button';
+  validationPanel.innerHTML = "";
+  const header = document.createElement("div");
+  header.className = "validation-header";
+  const title = document.createElement("h3");
+  title.textContent = "Flowchart Validation";
+  const closeBtn = document.createElement("button");
+  closeBtn.innerHTML = "&times;";
+  closeBtn.className = "close-button";
   closeBtn.onclick = () => {
-    validationPanel.style.display = 'none';
+    validationPanel.style.display = "none";
     clearValidationHighlights();
   };
-  
   header.appendChild(title);
   header.appendChild(closeBtn);
   validationPanel.appendChild(header);
-  
-  // Create content
-  const content = document.createElement('div');
-  content.className = 'validation-content';
-  
+  const content = document.createElement("div");
+  content.className = "validation-content";
   if (results.isValid && results.warnings.length === 0) {
-    const success = document.createElement('div');
-    success.className = 'validation-success';
-    success.innerHTML = '<i class="fas fa-check-circle"></i> Flowchart is valid!';
+    const success = document.createElement("div");
+    success.className = "validation-success";
+    success.innerHTML =
+      '<i class="fas fa-check-circle"></i> Flowchart is valid!';
     content.appendChild(success);
   } else {
-    // Show errors
     if (results.errors.length > 0) {
-      const errorSection = document.createElement('div');
-      errorSection.className = 'validation-section';
-      
-      const errorTitle = document.createElement('h4');
+      const errorSection = document.createElement("div");
+      errorSection.className = "validation-section";
+      const errorTitle = document.createElement("h4");
       errorTitle.innerHTML = '<i class="fas fa-exclamation-circle"></i> Errors';
-      errorTitle.className = 'section-title error-title';
+      errorTitle.className = "section-title error-title";
       errorSection.appendChild(errorTitle);
-      
-      const errorList = document.createElement('ul');
-      errorList.className = 'validation-list';
-      
-      results.errors.forEach(error => {
-        const item = document.createElement('li');
-        item.className = 'validation-item error-item';
+      const errorList = document.createElement("ul");
+      errorList.className = "validation-list";
+      results.errors.forEach((error) => {
+        const item = document.createElement("li");
+        item.className = "validation-item error-item";
         item.innerHTML = `<span class="error-icon">⚠️</span> ${error.message}`;
-        
-        // Add a "focus" button if there are affected nodes
         if (error.affectedNodes && error.affectedNodes.length > 0) {
-          const focusBtn = document.createElement('button');
-          focusBtn.textContent = 'Focus';
-          focusBtn.className = 'focus-button';
+          const focusBtn = document.createElement("button");
+          focusBtn.textContent = "Focus";
+          focusBtn.className = "focus-button";
           focusBtn.onclick = () => {
-            // Center the view on the first affected node
             const node = error.affectedNodes[0].node;
             const nodeRect = node.getBoundingClientRect();
             const canvasRect = canvas.getBoundingClientRect();
-            
-            // Calculate center position
-            const centerX = nodeRect.left + nodeRect.width / 2 - canvasRect.left;
+            const centerX =
+              nodeRect.left + nodeRect.width / 2 - canvasRect.left;
             const centerY = nodeRect.top + nodeRect.height / 2 - canvasRect.top;
-            
-            // You may need to implement scrolling functionality here
-            // For example, by adjusting the canvas parent's scrollLeft and scrollTop
-            
-            // Highlight the node
-            document.querySelectorAll('.node-highlight').forEach(el => el.classList.remove('node-highlight'));
-            node.classList.add('node-highlight');
-            
-            // Remove highlight after a few seconds
+            document
+              .querySelectorAll(".node-highlight")
+              .forEach((el) => el.classList.remove("node-highlight"));
+            node.classList.add("node-highlight");
             setTimeout(() => {
-              node.classList.remove('node-highlight');
+              node.classList.remove("node-highlight");
             }, 3000);
           };
-          
           item.appendChild(focusBtn);
         }
-        
         errorList.appendChild(item);
       });
-      
       errorSection.appendChild(errorList);
       content.appendChild(errorSection);
     }
-    
-    // Show warnings
     if (results.warnings.length > 0) {
-      const warningSection = document.createElement('div');
-      warningSection.className = 'validation-section';
-      
-      const warningTitle = document.createElement('h4');
-      warningTitle.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Warnings';
-      warningTitle.className = 'section-title warning-title';
+      const warningSection = document.createElement("div");
+      warningSection.className = "validation-section";
+      const warningTitle = document.createElement("h4");
+      warningTitle.innerHTML =
+        '<i class="fas fa-exclamation-triangle"></i> Warnings';
+      warningTitle.className = "section-title warning-title";
       warningSection.appendChild(warningTitle);
-      
-      const warningList = document.createElement('ul');
-      warningList.className = 'validation-list';
-      
-      results.warnings.forEach(warning => {
-        const item = document.createElement('li');
-        item.className = 'validation-item warning-item';
+      const warningList = document.createElement("ul");
+      warningList.className = "validation-list";
+      results.warnings.forEach((warning) => {
+        const item = document.createElement("li");
+        item.className = "validation-item warning-item";
         item.innerHTML = `<span class="warning-icon">⚠️</span> ${warning.message}`;
         warningList.appendChild(item);
       });
-      
       warningSection.appendChild(warningList);
-      content.appendChild(warningSection);Issues
+      content.appendChild(warningSection);
+      Issues;
     }
   }
-  
   validationPanel.appendChild(content);
-  
-  // Action buttons
-  const actions = document.createElement('div');
-  actions.className = 'validation-actions';
-  
-  const autoFixBtn = document.createElement('button');
-  autoFixBtn.textContent = 'Auto-Fix Issues';
-  autoFixBtn.className = 'action-button primary-button';
+  const actions = document.createElement("div");
+  actions.className = "validation-actions";
+  const autoFixBtn = document.createElement("button");
+  autoFixBtn.textContent = "Auto-Fix Issues";
+  autoFixBtn.className = "action-button primary-button";
   autoFixBtn.onclick = () => {
     autoFixFlowchartIssues(results);
   };
-  
   actions.appendChild(autoFixBtn);
   validationPanel.appendChild(actions);
-  
-  // Show the panel
-  validationPanel.style.display = 'block';
+  validationPanel.style.display = "block";
 }
-
-// Function to attempt to auto-fix common issues
-
 
 // Add CSS for validation styles
 function addValidationStyles() {
-  const style = document.createElement('style');
+  const style = document.createElement("style");
   style.textContent = `
     .validation-panel {
       position: fixed;
@@ -2310,56 +2377,78 @@ function addValidationStyles() {
 
 // Call this when the DOM is loaded
 addValidationStyles();
-
-// Modify the "Fix" button click handler
-document.querySelector('.fix-button').addEventListener('click', function() {
+document.querySelector(".fix-button").addEventListener("click", function () {
   const validationResults = performClientSideValidation();
   showValidationResults(validationResults);
   highlightProblemNodes(validationResults);
-  
-  // Update validation items in the existing UI
-  const validationItems = document.querySelectorAll('.validation-item');
-  
-  // Update "Start Node" status
-  if (validationResults.errors.some(e => e.type === 'missing_start')) {
-    validationItems[0].querySelector('.validation-status').classList.remove('status-valid');
-    validationItems[0].querySelector('.validation-status').classList.add('status-invalid');
+  const validationItems = document.querySelectorAll(".validation-item");
+  if (validationResults.errors.some((e) => e.type === "missing_start")) {
+    validationItems[0]
+      .querySelector(".validation-status")
+      .classList.remove("status-valid");
+    validationItems[0]
+      .querySelector(".validation-status")
+      .classList.add("status-invalid");
   } else {
-    validationItems[0].querySelector('.validation-status').classList.remove('status-invalid');
-    validationItems[0].querySelector('.validation-status').classList.add('status-valid');
+    validationItems[0]
+      .querySelector(".validation-status")
+      .classList.remove("status-invalid");
+    validationItems[0]
+      .querySelector(".validation-status")
+      .classList.add("status-valid");
   }
-  
-  // Update "End Node" status
-  if (validationResults.errors.some(e => e.type === 'missing_end')) {
-    validationItems[1].querySelector('.validation-status').classList.remove('status-valid');
-    validationItems[1].querySelector('.validation-status').classList.add('status-invalid');
+  if (validationResults.errors.some((e) => e.type === "missing_end")) {
+    validationItems[1]
+      .querySelector(".validation-status")
+      .classList.remove("status-valid");
+    validationItems[1]
+      .querySelector(".validation-status")
+      .classList.add("status-invalid");
   } else {
-    validationItems[1].querySelector('.validation-status').classList.remove('status-invalid');
-    validationItems[1].querySelector('.validation-status').classList.add('status-valid');
+    validationItems[1]
+      .querySelector(".validation-status")
+      .classList.remove("status-invalid");
+    validationItems[1]
+      .querySelector(".validation-status")
+      .classList.add("status-valid");
   }
-  
-  // Update "Decision Branches" status
-  if (validationResults.errors.some(e => e.type === 'decision_without_branches')) {
-    validationItems[2].querySelector('.validation-status').classList.remove('status-valid');
-    validationItems[2].querySelector('.validation-status').classList.add('status-invalid');
+  if (
+    validationResults.errors.some((e) => e.type === "decision_without_branches")
+  ) {
+    validationItems[2]
+      .querySelector(".validation-status")
+      .classList.remove("status-valid");
+    validationItems[2]
+      .querySelector(".validation-status")
+      .classList.add("status-invalid");
   } else {
-    validationItems[2].querySelector('.validation-status').classList.remove('status-invalid');
-    validationItems[2].querySelector('.validation-status').classList.add('status-valid');
+    validationItems[2]
+      .querySelector(".validation-status")
+      .classList.remove("status-invalid");
+    validationItems[2]
+      .querySelector(".validation-status")
+      .classList.add("status-valid");
   }
-  
-  // Update "Connected Nodes" status
-  if (validationResults.errors.some(e => e.type === 'disconnected_nodes')) {
-    validationItems[3].querySelector('.validation-status').classList.remove('status-valid');
-    validationItems[3].querySelector('.validation-status').classList.add('status-invalid');
+  if (validationResults.errors.some((e) => e.type === "disconnected_nodes")) {
+    validationItems[3]
+      .querySelector(".validation-status")
+      .classList.remove("status-valid");
+    validationItems[3]
+      .querySelector(".validation-status")
+      .classList.add("status-invalid");
   } else {
-    validationItems[3].querySelector('.validation-status').classList.remove('status-invalid');
-    validationItems[3].querySelector('.validation-status').classList.add('status-valid');
+    validationItems[3]
+      .querySelector(".validation-status")
+      .classList.remove("status-invalid");
+    validationItems[3]
+      .querySelector(".validation-status")
+      .classList.add("status-valid");
   }
 });
 
 // Add a keyboard shortcut for validation (Ctrl+Shift+V)
-document.addEventListener('keydown', function(e) {
-  if (e.ctrlKey && e.shiftKey && e.key === 'V') {
+document.addEventListener("keydown", function (e) {
+  if (e.ctrlKey && e.shiftKey && e.key === "V") {
     const validationResults = performClientSideValidation();
     showValidationResults(validationResults);
     highlightProblemNodes(validationResults);
@@ -2369,49 +2458,60 @@ document.addEventListener('keydown', function(e) {
 
 // Function to update node count in the sidebar
 function updateNodeCount() {
-  const nodeCountElement = document.querySelector('.sidebar-stat:nth-child(1) .stat-value');
+  const nodeCountElement = document.querySelector(
+    ".sidebar-stat:nth-child(1) .stat-value"
+  );
   if (nodeCountElement) {
-    const count = document.querySelectorAll('.node:not(.connector)').length;
+    const count = document.querySelectorAll(".node:not(.connector)").length;
     nodeCountElement.textContent = count;
   }
 }
 
 // Function to update connections count in the sidebar
 function updateConnectionsCount() {
-  const connectionCountElement = document.querySelector('.sidebar-stat:nth-child(2) .stat-value');
+  const connectionCountElement = document.querySelector(
+    ".sidebar-stat:nth-child(2) .stat-value"
+  );
   if (connectionCountElement) {
-    const count = document.querySelectorAll('.connector').length;
+    const count = document.querySelectorAll(".connector").length;
     connectionCountElement.textContent = count;
   }
 }
 
 // Helper function to show status message
 function showStatusMessage(message) {
-  let statusBar = document.querySelector('.status-bar');
+  let statusBar = document.querySelector(".status-bar");
   if (!statusBar) {
-    statusBar = document.createElement('div');
-    statusBar.className = 'status-bar';
+    statusBar = document.createElement("div");
+    statusBar.className = "status-bar";
     document.body.appendChild(statusBar);
   }
-  
   statusBar.textContent = message;
-  statusBar.style.display = 'block';
-  statusBar.style.opacity = '1';
+  statusBar.style.display = "block";
+  statusBar.style.opacity = "1";
 }
 
 // Helper function to hide status message
 function hideStatusMessage() {
-  const statusBar = document.querySelector('.status-bar');
+  const statusBar = document.querySelector(".status-bar");
   if (statusBar) {
-    statusBar.style.opacity = '0';
+    statusBar.style.opacity = "0";
     setTimeout(() => {
-      statusBar.style.display = 'none';
+      statusBar.style.display = "none";
     }, 300);
   }
 }
-// Add these functions to your existing JavaScript
+let simulationActive = false;
+let currentSimulationNode = null;
+let simulationPath = [];
+let simulationInterval = null;
+let simulationSpeed = 1000;
+const existingSimulateButton = document.querySelector('button.btn.btn-success');
+if (existingSimulateButton) {
+  existingSimulateButton.remove();
+}
 
-// Create simulation button directly
+// Create simulation button
 const simulateButton = document.createElement('button');
 simulateButton.className = 'btn btn-success';
 simulateButton.innerHTML = '<i class="fas fa-play"></i> Simulate';
@@ -2421,83 +2521,90 @@ simulateButton.style.right = '10px';
 simulateButton.style.zIndex = '1000';
 simulateButton.onclick = startSimulation;
 document.body.appendChild(simulateButton);
+
+// Function to collect all SVG connectors when the page loads
+function collectConnectors() {
+  svgConnectors = {};
+  document.querySelectorAll('.connector').forEach(connector => {
+    const id = connector.id || `connector-${Math.random().toString(36).substr(2, 9)}`;
+    if (!connector.id) connector.id = id;
+    const sourceId = connector.getAttribute('data-source');
+    const targetId = connector.getAttribute('data-target');
+    const sourceNode = document.querySelector(`[data-id="${sourceId}"]`);
+    const targetNode = document.querySelector(`[data-id="${targetId}"]`);
+    const path = connector.querySelector('path') || connector;
+    if (sourceNode && targetNode) {
+      svgConnectors[id] = {
+        source: sourceNode,
+        target: targetNode,
+        path: path
+      };
+    }
+  });
+  console.log('Collected connectors:', Object.keys(svgConnectors).length);
+}
+
 // Function to start the simulation
 function startSimulation() {
   if (simulationActive) return;
-  
-  // Find start node
+  collectConnectors();
   const startNode = document.querySelector('[data-id^="start"]');
   if (!startNode) {
     showStatusMessage("Error: No start node found!");
+    console.error("No start node found!");
     return;
   }
-  
-  // Reset any previous simulation
   resetSimulation();
-  
-  // Start the simulation
   simulationActive = true;
   currentSimulationNode = startNode;
   highlightNode(currentSimulationNode);
-  
-  // Add simulation controls to the UI
   showSimulationControls();
-  
-  // Start the automatic stepping
+  showStatusMessage("Simulation started!");
   simulationInterval = setInterval(simulationStep, simulationSpeed);
-  
-  // Update UI
-  document.getElementById('simulation-status').textContent = 'Simulation Running';
+  const statusEl = document.getElementById('simulation-status');
+  if (statusEl) statusEl.textContent = 'Simulation Running';
+  console.log("Simulation started!");
 }
 
 // Function to perform one step in the simulation
 function simulationStep() {
   if (!currentSimulationNode || !simulationActive) return;
-  
-  // Add current node to path
+  console.log("Simulation step at node:", currentSimulationNode.getAttribute('data-id'));
   simulationPath.push(currentSimulationNode.getAttribute('data-id'));
-  
-  // Find the next node based on current node type
   const nodeId = currentSimulationNode.getAttribute('data-id');
-  
-  // Find all outgoing connections from this node
   const outgoingConnectors = Array.from(document.querySelectorAll('.connector'))
     .filter(conn => conn.getAttribute('data-source') === nodeId);
-  
-  // If this is an end node or no outgoing connections, end simulation
+  console.log(`Found ${outgoingConnectors.length} outgoing connections from node ${nodeId}`);
   if (nodeId.startsWith('end') || outgoingConnectors.length === 0) {
-    highlightNode(currentSimulationNode, '#4CAF50'); // Green for completion
+    highlightNode(currentSimulationNode, '#4CAF50'); 
     stopSimulation(true);
     showStatusMessage("Simulation completed successfully!");
     return;
   }
-  
   let nextNodeId = null;
-  
-  // For decision nodes, show prompt to choose path
   if (nodeId.startsWith('decision')) {
     pauseSimulation();
     showDecisionPrompt(currentSimulationNode, outgoingConnectors);
     return;
   } 
-  // For regular nodes, just follow the first connection
   else if (outgoingConnectors.length > 0) {
     nextNodeId = outgoingConnectors[0].getAttribute('data-target');
   }
-  
-  // If we found a next node, move to it
   if (nextNodeId) {
+    console.log(`Moving to next node: ${nextNodeId}`);
     const prevNode = currentSimulationNode;
     currentSimulationNode = document.querySelector(`[data-id="${nextNodeId}"]`);
-    
-    // Unhighlight previous node and highlight new one
+    if (!currentSimulationNode) {
+      console.error(`Could not find target node with id ${nextNodeId}`);
+      stopSimulation(false);
+      showStatusMessage(`Error: Could not find target node ${nextNodeId}`);
+      return;
+    }
     unhighlightNode(prevNode);
     highlightNode(currentSimulationNode);
-    
-    // Highlight the connector
     highlightConnector(nodeId, nextNodeId);
   } else {
-    // No next node found, end simulation
+    console.log("No valid next node found, ending simulation");
     stopSimulation(false);
     showStatusMessage("Simulation ended: no valid path forward.");
   }
@@ -2506,28 +2613,18 @@ function simulationStep() {
 // Function for decision nodes to select a path
 function selectDecisionPath(targetNodeId) {
   if (!simulationActive || !currentSimulationNode) return;
-  
-  // Get the current node ID
+  console.log(`Decision path selected: ${targetNodeId}`);
   const currentNodeId = currentSimulationNode.getAttribute('data-id');
-  
-  // Find the next node
   const nextNode = document.querySelector(`[data-id="${targetNodeId}"]`);
-  if (!nextNode) return;
-  
-  // Unhighlight current node
+  if (!nextNode) {
+    console.error(`Could not find target node with id ${targetNodeId}`);
+    return;
+  }
   unhighlightNode(currentSimulationNode);
-  
-  // Move to next node
   currentSimulationNode = nextNode;
   highlightNode(currentSimulationNode);
-  
-  // Highlight the connection
   highlightConnector(currentNodeId, targetNodeId);
-  
-  // Hide decision prompt
   hideDecisionPrompt();
-  
-  // Resume simulation if it was paused
   if (simulationActive && !simulationInterval) {
     simulationInterval = setInterval(simulationStep, simulationSpeed);
   }
@@ -2535,25 +2632,21 @@ function selectDecisionPath(targetNodeId) {
 
 // Function to show decision prompt
 function showDecisionPrompt(decisionNode, connectors) {
+  console.log("Showing decision prompt");
   const promptDiv = document.createElement('div');
   promptDiv.id = 'decision-prompt';
   promptDiv.className = 'decision-prompt';
-  
-  const nodeText = decisionNode.querySelector('.node-text').textContent;
-  
+  const nodeText = decisionNode.querySelector('.node-text')?.textContent || 'Decision';
   const promptTitle = document.createElement('h4');
   promptTitle.textContent = `Decision: ${nodeText}`;
   promptDiv.appendChild(promptTitle);
-  
   const buttonContainer = document.createElement('div');
   buttonContainer.className = 'decision-buttons';
-  
   connectors.forEach(conn => {
     const targetId = conn.getAttribute('data-target');
     const targetNode = document.querySelector(`[data-id="${targetId}"]`);
     if (targetNode) {
-      const targetText = targetNode.querySelector('.node-text')?.textContent || 'Unknown';
-      
+      const targetText = targetNode.querySelector('.node-text')?.textContent || 'Option';
       const choiceBtn = document.createElement('button');
       choiceBtn.className = 'btn btn-sm btn-primary';
       choiceBtn.textContent = targetText;
@@ -2561,7 +2654,6 @@ function showDecisionPrompt(decisionNode, connectors) {
       buttonContainer.appendChild(choiceBtn);
     }
   });
-  
   promptDiv.appendChild(buttonContainer);
   document.body.appendChild(promptDiv);
 }
@@ -2578,15 +2670,18 @@ function pauseSimulation() {
     clearInterval(simulationInterval);
     simulationInterval = null;
   }
-  
-  document.getElementById('simulation-status').textContent = 'Simulation Paused';
+  const statusEl = document.getElementById('simulation-status');
+  if (statusEl) statusEl.textContent = 'Simulation Paused';
+  console.log("Simulation paused");
 }
 
 // Function to resume the simulation
 function resumeSimulation() {
   if (simulationActive && !simulationInterval) {
     simulationInterval = setInterval(simulationStep, simulationSpeed);
-    document.getElementById('simulation-status').textContent = 'Simulation Running';
+    const statusEl = document.getElementById('simulation-status');
+    if (statusEl) statusEl.textContent = 'Simulation Running';
+    console.log("Simulation resumed");
   }
 }
 
@@ -2597,19 +2692,15 @@ function stopSimulation(completed = false) {
     clearInterval(simulationInterval);
     simulationInterval = null;
   }
-  
-  // Unhighlight all nodes and connections
   document.querySelectorAll('.node').forEach(unhighlightNode);
   document.querySelectorAll('.connector-highlight').forEach(el => {
     el.classList.remove('connector-highlight');
   });
-  
-  // Hide simulation controls
   hideSimulationControls();
-  
-  // Update status
-  document.getElementById('simulation-status').textContent = completed ? 
-    'Simulation Completed' : 'Simulation Stopped';
+  hideDecisionPrompt();
+  const statusEl = document.getElementById('simulation-status');
+  if (statusEl) statusEl.textContent = completed ? 'Simulation Completed' : 'Simulation Stopped';
+  console.log(`Simulation stopped (completed: ${completed})`);
 }
 
 // Function to reset the simulation
@@ -2621,14 +2712,12 @@ function resetSimulation() {
     clearInterval(simulationInterval);
     simulationInterval = null;
   }
-  
-  // Unhighlight all nodes and connections
   document.querySelectorAll('.node').forEach(unhighlightNode);
   document.querySelectorAll('.connector-highlight').forEach(el => {
     el.classList.remove('connector-highlight');
   });
-  
   hideDecisionPrompt();
+  console.log("Simulation reset");
 }
 
 // Function to highlight a node
@@ -2647,55 +2736,51 @@ function unhighlightNode(node) {
 
 // Function to highlight a connector
 function highlightConnector(sourceId, targetId) {
+  let connectorFound = false;
   Object.keys(svgConnectors).forEach(id => {
     const conn = svgConnectors[id];
-    if (conn.source.getAttribute('data-id') === sourceId && 
-        conn.target.getAttribute('data-id') === targetId) {
+    const connSourceId = conn.source.getAttribute('data-id');
+    const connTargetId = conn.target.getAttribute('data-id');
+    if (connSourceId === sourceId && connTargetId === targetId) {
       conn.path.classList.add('connector-highlight');
       conn.path.setAttribute('stroke', '#FF9800');
       conn.path.setAttribute('stroke-width', '3');
+      connectorFound = true;
     }
   });
+  if (!connectorFound) {
+    console.warn(`Could not find connector from ${sourceId} to ${targetId}`);
+  }
 }
 
 // Function to show simulation controls
 function showSimulationControls() {
-  // Check if controls already exist
   if (document.getElementById('simulation-controls')) return;
-  
   const controlsDiv = document.createElement('div');
   controlsDiv.id = 'simulation-controls';
   controlsDiv.className = 'simulation-controls';
-  
   const statusDiv = document.createElement('div');
   statusDiv.id = 'simulation-status';
   statusDiv.className = 'simulation-status';
   statusDiv.textContent = 'Simulation Running';
-  
   const controlButtons = document.createElement('div');
   controlButtons.className = 'control-buttons';
-  
   const pauseBtn = document.createElement('button');
   pauseBtn.className = 'btn btn-sm btn-warning';
   pauseBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
   pauseBtn.onclick = pauseSimulation;
-  
   const resumeBtn = document.createElement('button');
   resumeBtn.className = 'btn btn-sm btn-success';
   resumeBtn.innerHTML = '<i class="fas fa-play"></i> Resume';
   resumeBtn.onclick = resumeSimulation;
-  
   const stopBtn = document.createElement('button');
   stopBtn.className = 'btn btn-sm btn-danger';
   stopBtn.innerHTML = '<i class="fas fa-stop"></i> Stop';
   stopBtn.onclick = () => stopSimulation(false);
-  
   const speedControl = document.createElement('div');
   speedControl.className = 'speed-control';
-  
   const speedLabel = document.createElement('label');
   speedLabel.textContent = 'Speed:';
-  
   const speedSlider = document.createElement('input');
   speedSlider.type = 'range';
   speedSlider.min = '100';
@@ -2708,18 +2793,14 @@ function showSimulationControls() {
       simulationInterval = setInterval(simulationStep, simulationSpeed);
     }
   };
-  
   speedControl.appendChild(speedLabel);
   speedControl.appendChild(speedSlider);
-  
   controlButtons.appendChild(pauseBtn);
   controlButtons.appendChild(resumeBtn);
   controlButtons.appendChild(stopBtn);
-  
   controlsDiv.appendChild(statusDiv);
   controlsDiv.appendChild(controlButtons);
   controlsDiv.appendChild(speedControl);
-  
   document.body.appendChild(controlsDiv);
 }
 
@@ -2731,6 +2812,7 @@ function hideSimulationControls() {
 
 // Function to show status message
 function showStatusMessage(message) {
+  console.log("Status message:", message);
   let statusMessageDiv = document.getElementById('status-message');
   if (!statusMessageDiv) {
     statusMessageDiv = document.createElement('div');
@@ -2738,11 +2820,8 @@ function showStatusMessage(message) {
     statusMessageDiv.className = 'status-message';
     document.body.appendChild(statusMessageDiv);
   }
-  
   statusMessageDiv.textContent = message;
   statusMessageDiv.style.display = 'block';
-  
-  // Auto hide after 3 seconds
   setTimeout(() => {
     statusMessageDiv.style.display = 'none';
   }, 3000);
@@ -2756,34 +2835,11 @@ function hideStatusMessage() {
   }
 }
 
-function addSimulateButton() {
-  // Find an existing button's parent
-  const existingButton = document.querySelector('.btn-primary.btn-outline-primary') || 
-                         document.querySelector('.btn-secondary');
-  
-  if (existingButton && existingButton.parentNode) {
-    const simulateButton = document.createElement('button');
-    simulateButton.className = 'btn btn-success';
-    simulateButton.innerHTML = '<i class="fas fa-play"></i> Simulate';
-    simulateButton.onclick = startSimulation;
-    
-    existingButton.parentNode.appendChild(simulateButton);
-  } else {
-    // Fallback to body
-    const simulateButton = document.createElement('button');
-    simulateButton.className = 'btn btn-success';
-    simulateButton.style.position = 'fixed';
-    simulateButton.style.top = '10px';
-    simulateButton.style.right = '10px';
-    simulateButton.style.zIndex = '1000';
-    simulateButton.innerHTML = '<i class="fas fa-play"></i> Simulate';
-    simulateButton.onclick = startSimulation;
-    document.body.appendChild(simulateButton);
-  }
-}
-  
-  // Add CSS for simulation
+// Add CSS for simulation
+const existingStyles = document.getElementById('simulation-styles');
+if (!existingStyles) {
   const simulationStyles = document.createElement('style');
+  simulationStyles.id = 'simulation-styles';
   simulationStyles.textContent = `
     .node-highlight {
       transition: box-shadow 0.3s ease;
@@ -2828,7 +2884,8 @@ function addSimulateButton() {
     .status-message {
       position: fixed;
       top: 20px;
-      right: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       background: rgba(0,0,0,0.7);
       color: white;
       padding: 10px 15px;
@@ -2859,13 +2916,31 @@ function addSimulateButton() {
     }
   `;
   document.head.appendChild(simulationStyles);
+}
 
-
-// Add to your existing keyboard shortcuts
+// Add keyboard shortcuts
 document.addEventListener("keydown", function(e) {
+  if (e.key === "s" && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    if (typeof saveFlowchart === 'function') {
+      saveFlowchart();
+    } else {
+      console.error("saveFlowchart function not found");
+    }
+  }
+  if (e.key === "r" && e.altKey) {
+    e.preventDefault();
+    startSimulation();
+  }
+  if (e.key === "Escape" && simulationActive) {
+    e.preventDefault();
+    stopSimulation();
+  }
   if (e.key === "s" && (e.ctrlKey || e.metaKey)) {
     e.preventDefault();
     saveFlowchart();
   }
 });
-
+document.addEventListener('DOMContentLoaded', collectConnectors);
+collectConnectors();
+console.log("Simulation script loaded successfully");

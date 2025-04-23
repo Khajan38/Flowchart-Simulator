@@ -1,0 +1,120 @@
+{
+  "id": "48cf005b-7334-467c-91d1-7abd7dbc03ff",
+  "title": "FlowCraft",
+  "nodes": [
+    {
+      "id": "start_NaN",
+      "type": "start",
+      "text": "Start",
+      "position": {
+        "x": 188,
+        "y": 51
+      },
+      "size": {
+        "width": 97.79167175292969,
+        "height": 42.66666793823242
+      }
+    },
+    {
+      "id": "end_NaN",
+      "type": "end",
+      "text": "End",
+      "position": {
+        "x": 319,
+        "y": 293
+      },
+      "size": {
+        "width": 92.46875,
+        "height": 42.66666793823242
+      }
+    },
+    {
+      "id": "start_NaN",
+      "type": "start",
+      "text": "Start",
+      "position": {
+        "x": 188,
+        "y": 51
+      },
+      "size": {
+        "width": 97.79167175292969,
+        "height": 42.66666793823242
+      }
+    },
+    {
+      "id": "end_NaN",
+      "type": "end",
+      "text": "End",
+      "position": {
+        "x": 319,
+        "y": 293
+      },
+      "size": {
+        "width": 92.46875,
+        "height": 42.66666793823242
+      }
+    },
+    {
+      "id": "input_1",
+      "type": "input_output",
+      "text": "Input/Output",
+      "position": {
+        "x": 424,
+        "y": 178
+      },
+      "size": {
+        "width": 167.5918426513672,
+        "height": 42.66666793823242
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "connector_1",
+      "source": "start_NaN",
+      "target": "end_NaN",
+      "type": "straight",
+      "label": ""
+    },
+    {
+      "id": "connector_1",
+      "source": "start_NaN",
+      "target": "end_NaN",
+      "type": "straight",
+      "label": ""
+    },
+    {
+      "id": "connector_1",
+      "source": "start_NaN",
+      "target": "end_NaN",
+      "type": "straight",
+      "label": ""
+    },
+    {
+      "id": "connector_1",
+      "source": "start_NaN",
+      "target": "end_NaN",
+      "type": "straight",
+      "label": ""
+    },
+    {
+      "id": "connector_5",
+      "source": "start_NaN",
+      "target": "input_1",
+      "type": "straight",
+      "label": ""
+    },
+    {
+      "id": "connector_6",
+      "source": "input_1",
+      "target": "end_NaN",
+      "type": "straight",
+      "label": ""
+    }
+  ],
+  "metadata": {
+    "created": "2025-04-23T09:47:15.884366",
+    "modified": "2025-04-23T09:48:47.149025",
+    "version": "1.0"
+  }
+}

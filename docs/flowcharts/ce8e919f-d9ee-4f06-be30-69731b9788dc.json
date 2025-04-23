@@ -1,0 +1,25 @@
+{
+  "id": "ce8e919f-d9ee-4f06-be30-69731b9788dc",
+  "title": "FlowCraft",
+  "nodes": [
+    {
+      "id": "start_NaN",
+      "type": "start",
+      "text": "Start",
+      "position": {
+        "x": 119,
+        "y": 102
+      },
+      "size": {
+        "width": 97.79167175292969,
+        "height": 42.66666793823242
+      }
+    }
+  ],
+  "connections": [],
+  "metadata": {
+    "created": "2025-04-23T09:54:47.401953",
+    "modified": "2025-04-23T09:54:47.401953",
+    "version": "1.0"
+  }
+}

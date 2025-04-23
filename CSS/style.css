@@ -72,7 +72,7 @@ body {
 
 .fix-button {
   width: 100%;
-  background-color: #6ff436;
+  background-color: #54c9f4;
   color: white;
   padding: 10px;
   border: none;
@@ -82,7 +82,7 @@ body {
 }
 
 .del-button:hover {
-  background-color: #39e91e;
+  background-color: #1ea9e9;
 }
 
 .del-button {
